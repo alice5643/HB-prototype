@@ -1,64 +1,72 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark";
-
-interface ThemeContextType {
-  theme: Theme;
-  toggleTheme?: () => void;
-  switchable: boolean;
-}
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+export type Theme = "earthen" | "nocturnal" | "botanical";
 
 interface ThemeProviderProps {
   children: React.ReactNode;
   defaultTheme?: Theme;
-  switchable?: boolean;
 }
+
+interface ThemeContextState {
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+}
+
+const initialState: ThemeContextState = {
+  theme: "earthen",
+  setTheme: () => null,
+};
+
+const ThemeContext = createContext<ThemeContextState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = "light",
-  switchable = false,
+  defaultTheme = "earthen",
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
-    if (switchable) {
-      const stored = localStorage.getItem("theme");
-      return (stored as Theme) || defaultTheme;
-    }
-    return defaultTheme;
+    const storedTheme = localStorage.getItem("azay-theme") as Theme;
+    return storedTheme || defaultTheme;
   });
 
   useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "dark") {
+    const root = window.document.documentElement;
+    
+    // Remove old theme attributes
+    root.removeAttribute("data-theme");
+    
+    // Set new theme
+    root.setAttribute("data-theme", theme);
+    
+    // Handle dark mode class for Nocturnal theme
+    if (theme === "nocturnal") {
       root.classList.add("dark");
     } else {
       root.classList.remove("dark");
     }
+    
+    // Save to local storage
+    localStorage.setItem("azay-theme", theme);
+  }, [theme]);
 
-    if (switchable) {
-      localStorage.setItem("theme", theme);
-    }
-  }, [theme, switchable]);
-
-  const toggleTheme = switchable
-    ? () => {
-        setTheme(prev => (prev === "light" ? "dark" : "light"));
-      }
-    : undefined;
+  const value = {
+    theme,
+    setTheme: (theme: Theme) => {
+      setTheme(theme);
+    },
+  };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, switchable }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );
 }
 
-export function useTheme() {
+export const useTheme = () => {
   const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error("useTheme must be used within ThemeProvider");
-  }
+
+  if (context === undefined)
+    throw new Error("useTheme must be used within a ThemeProvider");
+
   return context;
-}
+};

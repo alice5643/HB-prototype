@@ -4,13 +4,21 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
+import Welcome from "./pages/Welcome";
+import Menu from "./pages/Menu";
+import Gallery from "./pages/Gallery";
+import DishDetail from "./pages/DishDetail";
+import Confirmation from "./pages/Confirmation";
 
 
 function Router() {
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
+      <Route path={"/"} component={Welcome} />
+      <Route path={"/menu"} component={Menu} />
+      <Route path={"/gallery"} component={Gallery} />
+      <Route path={"/dish/:id"} component={DishDetail} />
+      <Route path={"/confirmation"} component={Confirmation} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -26,10 +34,7 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
+      <ThemeProvider defaultTheme="earthen">
         <TooltipProvider>
           <Toaster />
           <Router />
