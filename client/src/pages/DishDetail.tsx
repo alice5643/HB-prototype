@@ -63,7 +63,13 @@ export default function DishDetail() {
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => window.history.back()}
+            onClick={() => {
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                setLocation("/menus");
+              }
+            }}
             className="absolute top-6 left-6 rounded-full bg-background/20 backdrop-blur-md text-foreground hover:bg-background/40"
           >
             <ArrowLeft className="w-5 h-5" />
