@@ -3,15 +3,21 @@ import { useStore } from "@/lib/store";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, Minus, Scale } from "lucide-react";
+import { ArrowLeft, Plus, Minus, Check, Info } from "lucide-react";
 import { useState, useEffect } from "react";
 import { menus, MenuSection, Dish } from "@/lib/data";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 export default function DishDetail() {
   const [, params] = useRoute("/dish/:id");
   const [, setLocation] = useLocation();
   const { addToCart, cart, updateQuantity } = useStore();
   const [quantity, setQuantity] = useState(1);
+  const [addedPairings, setAddedPairings] = useState<string[]>([]);
   
   // Find dish in static data
   const dishId = params?.id;
@@ -30,6 +36,17 @@ export default function DishDetail() {
   }, [cartItem]);
 
   if (!dish) return null;
+
+  // Get recommendations (6 items mixed from sides, drinks, and similar category)
+  const recommendations = [
+    ...allDishes.filter(d => d.category === 'sides' && d.id !== dish.id).slice(0, 2),
+    ...allDishes.filter(d => (d.category === 'cocktails' || d.category === 'wine') && d.id !== dish.id).slice(0, 2),
+    ...allDishes.filter(d => d.category === dish.category && d.id !== dish.id).slice(0, 2)
+  ].map(item => ({
+    ...item,
+    tag: item.category === 'sides' ? 'Side' : 
+         (item.category === 'cocktails' || item.category === 'wine') ? 'Drink' : 'Try this'
+  }));
 
   const handleAddToCart = () => {
     if (cartItem) {
@@ -121,74 +138,73 @@ export default function DishDetail() {
             {/* Combined Suggestions Section (Always visible) */}
             <div className="pt-6 border-t border-border/40">
               <h3 className="text-lg font-serif text-primary mb-4">Complete Your Experience</h3>
-              <p className="text-sm text-muted-foreground mb-4 italic">
-                it's text only here, should be the sides and wine lists horizontally scrollable and add them together. So show this section with Food comparision together , not just show this after food added to table
-              </p>
               
               <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 scrollbar-hide">
-                {/* 1. Perfect Pairings (Sides & Drinks) */}
-                {[
-                  allDishes.find(d => d.category === 'sides' && d.id !== dish.id),
-                  allDishes.find(d => d.category === 'cocktails' || d.category === 'wine')
-                ].filter(Boolean).map((pairingDish: any) => (
-                  <div 
-                    key={`pairing-${pairingDish.id}`}
-                    className="min-w-[160px] w-[160px] bg-card rounded-xl overflow-hidden border border-border/40 cursor-pointer hover:border-primary/40 transition-colors flex-shrink-0 relative group"
-                    onClick={() => setLocation(`/dish/${pairingDish.id}`)}
-                  >
-                    <div className="h-24 bg-secondary relative">
-                      <img 
-                        src={pairingDish.image || "/images/placeholder-dish.jpg"} 
-                        alt={pairingDish.name}
-                        className="w-full h-full object-cover"
-                      />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToCart(pairingDish);
-                          // Optional: Add toast notification here
-                        }}
-                        className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm rounded-full p-2 hover:bg-primary hover:text-primary-foreground transition-colors z-10"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
-                      <div className="absolute bottom-2 left-2 bg-primary/90 text-primary-foreground text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-medium">
-                        Pairing
-                      </div>
-                    </div>
-                    <div className="p-3">
-                      <h4 className="font-serif text-sm font-medium line-clamp-1">{pairingDish.name}</h4>
-                      <p className="text-xs text-muted-foreground mt-1">£{pairingDish.price}</p>
-                    </div>
-                  </div>
-                ))}
-
-                {/* 2. Similar Dishes (Comparison) */}
-                {allDishes
-                  .filter((d: Dish) => d.category === dish.category && d.id !== dish.id)
-                  .slice(0, 3)
-                  .map((similarDish: Dish) => (
-                    <div 
-                      key={`similar-${similarDish.id}`}
-                      className="min-w-[160px] w-[160px] bg-card rounded-xl overflow-hidden border border-border/40 cursor-pointer hover:border-primary/40 transition-colors flex-shrink-0"
-                      onClick={() => setLocation(`/dish/${similarDish.id}`)}
-                    >
-                      <div className="h-24 bg-secondary relative">
-                        <img 
-                          src={similarDish.image || "/images/placeholder-dish.jpg"} 
-                          alt={similarDish.name}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute bottom-2 left-2 bg-secondary/90 text-secondary-foreground text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-medium">
-                          Similar
+                {recommendations.map((recDish) => {
+                  const isAdded = addedPairings.includes(recDish.id) || cart.some(i => i.id === recDish.id);
+                  
+                  return (
+                    <Popover key={`rec-${recDish.id}`}>
+                      <PopoverTrigger asChild>
+                        <div 
+                          className="min-w-[160px] w-[160px] bg-card rounded-xl overflow-hidden border border-border/40 cursor-pointer hover:border-primary/40 transition-colors flex-shrink-0 relative group"
+                        >
+                          <div className="h-24 bg-secondary relative">
+                            <img 
+                              src={recDish.image || "/images/placeholder-dish.jpg"} 
+                              alt={recDish.name}
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!isAdded) {
+                                  addToCart(recDish);
+                                  setAddedPairings(prev => [...prev, recDish.id]);
+                                }
+                              }}
+                              className={`absolute top-2 right-2 backdrop-blur-sm rounded-full p-2 transition-all duration-300 z-10 ${
+                                isAdded 
+                                  ? "bg-primary text-primary-foreground" 
+                                  : "bg-background/80 hover:bg-primary hover:text-primary-foreground"
+                              }`}
+                            >
+                              {isAdded ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                            </button>
+                            <div className="absolute bottom-2 left-2 bg-primary/90 text-primary-foreground text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-medium">
+                              {recDish.tag}
+                            </div>
+                          </div>
+                          <div className="p-3">
+                            <div className="flex justify-between items-start gap-2">
+                              <h4 className="font-serif text-sm font-medium line-clamp-1">{recDish.name}</h4>
+                              <Info className="w-3 h-3 text-muted-foreground flex-shrink-0 mt-1 opacity-50" />
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">£{recDish.price}</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="p-3">
-                        <h4 className="font-serif text-sm font-medium line-clamp-1">{similarDish.name}</h4>
-                        <p className="text-xs text-muted-foreground mt-1">£{similarDish.price}</p>
-                      </div>
-                    </div>
-                  ))}
+                      </PopoverTrigger>
+                      <PopoverContent className="w-64 p-4" align="start">
+                        <div className="space-y-2">
+                          <h4 className="font-serif font-medium text-lg">{recDish.name}</h4>
+                          <p className="text-sm text-muted-foreground">{recDish.description}</p>
+                          {recDish.allergens && recDish.allergens.length > 0 && (
+                            <p className="text-xs text-amber-600/80">
+                              Contains: {recDish.allergens.join(", ")}
+                            </p>
+                          )}
+                          <Button 
+                            size="sm" 
+                            className="w-full mt-2"
+                            onClick={() => setLocation(`/dish/${recDish.id}`)}
+                          >
+                            View Full Details
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  );
+                })}
               </div>
             </div>
           </motion.div>
