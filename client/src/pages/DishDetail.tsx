@@ -3,9 +3,9 @@ import { useStore } from "@/lib/store";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, Minus } from "lucide-react";
+import { ArrowLeft, Plus, Minus, Scale } from "lucide-react";
 import { useState, useEffect } from "react";
-import { menuData as staticMenuData } from "@/lib/data";
+import { menus, MenuSection, Dish } from "@/lib/data";
 
 export default function DishDetail() {
   const [, params] = useRoute("/dish/:id");
@@ -15,9 +15,10 @@ export default function DishDetail() {
   
   // Find dish in static data
   const dishId = params?.id;
-  const dish = staticMenuData
-    .flatMap(section => section.items)
-    .find(item => item.id === dishId);
+  
+  // Search across all menus
+  const allDishes = menus.flatMap(menu => menu.data || []).flatMap((section: MenuSection) => section.items);
+  const dish = allDishes.find((item: Dish) => item.id === dishId);
     
   // Check if already in cart
   const cartItem = cart.find(item => item.id === dishId);
@@ -74,7 +75,7 @@ export default function DishDetail() {
                 <span className="text-xl font-mono text-muted-foreground mt-2">£{dish.price}</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {dish.tags.map(tag => (
+                {dish.tags.map((tag: string) => (
                   <span key={tag} className="text-xs uppercase tracking-wider text-primary/80 border border-primary/20 px-2 py-1 rounded-full">
                     {tag}
                   </span>
@@ -85,6 +86,14 @@ export default function DishDetail() {
             <p className="text-lg text-muted-foreground leading-relaxed font-serif">
               {dish.description}
             </p>
+
+            {dish.pairingSuggestion && (
+              <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
+                <p className="text-sm text-primary/80 font-serif italic">
+                  {dish.pairingSuggestion}
+                </p>
+              </div>
+            )}
 
             {dish.allergens && dish.allergens.length > 0 && (
               <div className="bg-secondary/30 p-4 rounded-xl border border-border/50">
@@ -99,6 +108,20 @@ export default function DishDetail() {
         {/* Bottom Action Bar */}
         <div className="fixed bottom-0 left-0 right-0 p-6 bg-background/80 backdrop-blur-lg border-t border-border/50 z-20" style={{ maxWidth: 'inherit', margin: '0 auto' }}>
           <div className="flex gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-14 w-14 rounded-full border-input shrink-0"
+              onClick={() => {
+                // Find a similar item to compare with (same category, different ID)
+                const similarDish = allDishes.find((d: Dish) => d.category === dish.category && d.id !== dish.id);
+                if (similarDish) {
+                  setLocation(`/compare/${dish.id}/${similarDish.id}`);
+                }
+              }}
+            >
+              <Scale className="w-5 h-5 text-muted-foreground" />
+            </Button>
             {cartItem ? (
               <div className="flex items-center gap-4 bg-secondary rounded-full px-4 h-14 flex-1 justify-between">
                 <button 

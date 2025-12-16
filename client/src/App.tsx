@@ -5,18 +5,24 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Welcome from "./pages/Welcome";
+import MenuList from "./pages/MenuList";
 import Menu from "./pages/Menu";
 import Gallery from "./pages/Gallery";
 import DishDetail from "./pages/DishDetail";
 import Confirmation from "./pages/Confirmation";
+import Compare from "./pages/Compare";
+import OrderDraft from "./pages/OrderDraft";
 
 
 function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Welcome} />
-      <Route path={"/menu"} component={Menu} />
-      <Route path={"/gallery"} component={Gallery} />
+      <Route path={"/menus"} component={MenuList} />
+      <Route path={"/menu/:type"} component={Menu} />
+      <Route path={"/gallery/:type"} component={Gallery} />
+      <Route path={"/compare/:id1/:id2"} component={Compare} />
+      <Route path={"/order-draft"} component={OrderDraft} />
       <Route path={"/dish/:id"} component={DishDetail} />
       <Route path={"/confirmation"} component={Confirmation} />
       <Route path={"/404"} component={NotFound} />

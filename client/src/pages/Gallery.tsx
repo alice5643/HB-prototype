@@ -3,14 +3,20 @@ import { useLocation } from "wouter";
 import Layout from "@/components/Layout";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
-import { menuData } from "@/lib/data";
+import { menus, MenuSection, Dish } from "@/lib/data";
+import { useRoute } from "wouter";
 import { Button } from "@/components/ui/button";
 
 export default function Gallery() {
+  const [, params] = useRoute("/gallery/:type");
   const [, setLocation] = useLocation();
   
+  const menuType = params?.type || "alacarte";
+  const currentMenu = menus.find(m => m.id === menuType);
+  const menuData = currentMenu?.data || [];
+  
   // Flatten menu items for gallery view
-  const allDishes = menuData.flatMap(section => section.items);
+  const allDishes = menuData.flatMap((section: MenuSection) => section.items);
 
   return (
     <Layout showHeader={false}>
@@ -25,7 +31,7 @@ export default function Gallery() {
           <Button 
             variant="outline" 
             size="icon"
-            onClick={() => setLocation("/menu")}
+            onClick={() => setLocation(`/menu/${menuType}`)}
             className="pointer-events-auto rounded-full bg-black/20 border-white/20 text-white hover:bg-white/20 hover:text-white backdrop-blur-md"
           >
             <X className="w-5 h-5" />
@@ -34,7 +40,7 @@ export default function Gallery() {
 
         {/* Gallery Grid */}
         <div className="flex flex-col gap-1 pb-24">
-          {allDishes.map((dish, index) => (
+          {allDishes.map((dish: Dish, index: number) => (
             <motion.div
               key={dish.id}
               initial={{ opacity: 0, scale: 0.95 }}
@@ -63,7 +69,7 @@ export default function Gallery() {
         {/* Floating Action Button to return to text menu */}
         <div className="fixed bottom-8 left-0 right-0 flex justify-center z-30 pointer-events-none">
           <Button 
-            onClick={() => setLocation("/menu")}
+            onClick={() => setLocation(`/menu/${menuType}`)}
             className="pointer-events-auto shadow-lg bg-white text-black hover:bg-stone-200 rounded-full px-6 py-6 font-serif text-lg"
           >
             Back to Text Menu

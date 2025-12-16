@@ -18,7 +18,7 @@ export default function Welcome() {
   
   const handleSharingModel = (model: SharingModel) => {
     setSharingModel(model);
-    setLocation("/menu");
+    setLocation("/menus");
   };
 
   return (

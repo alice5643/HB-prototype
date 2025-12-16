@@ -1,32 +1,49 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useRoute } from "wouter";
 import { useStore } from "@/lib/store";
 import Layout from "@/components/Layout";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
-import { ArrowRight, Info } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-// Import menuData from data file if not in store
-import { menuData as staticMenuData } from "@/lib/data";
+// Import menuData from data file
+import { menus, MenuSection, Dish } from "@/lib/data";
 
 export default function Menu() {
+  const [, params] = useRoute("/menu/:type");
   const [, setLocation] = useLocation();
   const [showPhotos, setShowPhotos] = useState(false);
+  
+  const menuType = params?.type || "alacarte";
+  const currentMenu = menus.find(m => m.id === menuType);
+  const menuData = currentMenu?.data || [];
   
   // Effect to handle toggle switch
   useEffect(() => {
     if (showPhotos) {
-      setLocation("/gallery");
+      setLocation(`/gallery/${menuType}`);
     }
-  }, [showPhotos, setLocation]);
+  }, [showPhotos, setLocation, menuType]);
+
+  if (!currentMenu) return null;
 
   return (
-    <Layout title="Menu">
+    <Layout title={currentMenu.title}>
       <div className="pb-24">
-        {/* View Toggle */}
-        <div className="container py-6 flex justify-end">
+        {/* Navigation & View Toggle */}
+        <div className="container py-6 flex justify-between items-center">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-muted-foreground hover:text-primary pl-0 gap-1"
+            onClick={() => setLocation("/menus")}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            All Menus
+          </Button>
+
           <div className="flex items-center space-x-2 bg-secondary/50 px-4 py-2 rounded-full">
             <Label htmlFor="photo-mode" className="text-xs font-medium cursor-pointer">View with photos</Label>
             <Switch 
@@ -40,7 +57,7 @@ export default function Menu() {
 
         {/* Menu Sections */}
         <div className="space-y-12 container">
-          {staticMenuData.map((section, index) => (
+          {menuData.map((section: MenuSection, index: number) => (
             <motion.section 
               key={section.id}
               initial={{ opacity: 0, y: 20 }}
@@ -57,7 +74,7 @@ export default function Menu() {
               </div>
 
               <div className="space-y-8">
-                {section.items.map((dish) => (
+                {section.items.map((dish: Dish) => (
                   <div 
                     key={dish.id}
                     onClick={() => setLocation(`/dish/${dish.id}`)}
@@ -69,7 +86,7 @@ export default function Menu() {
                     </div>
                     <p className="text-muted-foreground leading-relaxed pr-8">{dish.description}</p>
                     <div className="flex gap-2 pt-1">
-                      {dish.tags.map(tag => (
+                      {dish.tags.map((tag: string) => (
                         <span key={tag} className="text-[10px] uppercase tracking-wider text-muted-foreground/70 border border-border px-2 py-0.5 rounded-full">
                           {tag}
                         </span>

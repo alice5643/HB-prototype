@@ -10,6 +10,7 @@ export interface Dish {
   isVegetarian?: boolean;
   isVegan?: boolean;
   isGlutenFree?: boolean;
+  pairingSuggestion?: string;
 }
 
 export interface MenuSection {
@@ -19,7 +20,7 @@ export interface MenuSection {
   items: Dish[];
 }
 
-export const menuData: MenuSection[] = [
+export const aLaCarteMenuData: MenuSection[] = [
   {
     id: "starters",
     title: "To Begin",
@@ -127,8 +128,92 @@ export const menuData: MenuSection[] = [
         image: "/images/dish4.jpg", // Reusing for demo
         tags: ["Light", "Citrus"],
         allergens: ["Dairy", "Gluten"],
-        isVegetarian: true
+        isVegetarian: true,
+        pairingSuggestion: "Often paired with a crisp Sauvignon Blanc."
       }
     ]
   }
+];
+
+export const drinksMenuData: MenuSection[] = [
+  {
+    id: "cocktails",
+    title: "Signature Cocktails",
+    description: "Hand-crafted libations inspired by the seasons.",
+    items: [
+      {
+        id: "d1",
+        name: "Yuzu Highball",
+        description: "Japanese whisky, fresh yuzu, soda, shiso leaf.",
+        price: 14,
+        category: "drinks",
+        tags: ["Refreshing", "Citrus"],
+        pairingSuggestion: "Perfect with the Cured Hamachi."
+      },
+      {
+        id: "d2",
+        name: "Smoked Old Fashioned",
+        description: "Bourbon, maple syrup, angostura bitters, hickory smoke.",
+        price: 16,
+        category: "drinks",
+        tags: ["Strong", "Smoky"],
+        pairingSuggestion: "Pairs well with the Duck Breast."
+      }
+    ]
+  },
+  {
+    id: "wines",
+    title: "Wines by the Glass",
+    description: "Curated selection from sustainable vineyards.",
+    items: [
+      {
+        id: "d3",
+        name: "Sancerre, Domaine Vacheron",
+        description: "Loire Valley, France. Crisp, mineral, citrus notes.",
+        price: 15,
+        category: "drinks",
+        tags: ["White", "Dry"],
+        pairingSuggestion: "Excellent with the Pan-Seared Scallops."
+      },
+      {
+        id: "d4",
+        name: "Pinot Noir, Felton Road",
+        description: "Central Otago, NZ. Red cherry, spice, earthy.",
+        price: 18,
+        category: "drinks",
+        tags: ["Red", "Light"],
+        pairingSuggestion: "Try this with the Roasted Beetroot."
+      }
+    ]
+  },
+  {
+    id: "soft",
+    title: "Soft Drinks",
+    description: "Refreshing non-alcoholic options.",
+    items: [
+      {
+        id: "d5",
+        name: "Homemade Lemonade",
+        description: "Fresh lemon, mint, soda.",
+        price: 6,
+        category: "drinks",
+        tags: ["Non-Alcoholic"],
+      },
+      {
+        id: "d6",
+        name: "Sparkling Water",
+        description: "750ml bottle.",
+        price: 5,
+        category: "drinks",
+        tags: ["Non-Alcoholic"],
+      }
+    ]
+  }
+];
+
+export const menus = [
+  { id: "alacarte", title: "A la Carte", data: aLaCarteMenuData },
+  { id: "drinks", title: "Drinks Menu", data: drinksMenuData },
+  { id: "tasting", title: "Tasting Menu", description: "Coming soon", disabled: true },
+  { id: "promenn", title: "Promenn Menu", description: "Coming soon", disabled: true },
 ];

@@ -148,7 +148,7 @@ export default function Layout({ children, showHeader = true, title }: LayoutPro
                     onClick={() => {
                       submitOrder();
                       setIsTrayOpen(false);
-                      setLocation("/confirmation");
+                      setLocation("/order-draft");
                     }}
                   >
                     Ask staff to confirm order
