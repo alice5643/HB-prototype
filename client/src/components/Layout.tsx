@@ -136,7 +136,8 @@ export default function Layout({ children, showHeader = true, title }: LayoutPro
                 </ScrollArea>
 
                 {/* Sticky Footer */}
-                <div className="mt-auto pt-4 border-t border-border bg-background z-10">
+                {/* Sticky Footer */}
+                <div className="flex-shrink-0 pt-4 border-t border-border bg-background z-10 pb-6">
                   <div className="space-y-4">
                     <div className="bg-secondary/30 p-4 rounded-xl">
                       <p className="text-sm text-muted-foreground text-center italic">

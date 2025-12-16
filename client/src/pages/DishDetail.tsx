@@ -104,26 +104,44 @@ export default function DishDetail() {
                 </p>
               </div>
             )}
+
+            {/* Embedded Comparison Section */}
+            <div className="pt-6 border-t border-border/40">
+              <h3 className="text-lg font-serif text-primary mb-4">Try a different flavor</h3>
+              <p className="text-sm text-muted-foreground mb-4 italic">Choose what fits your mood.</p>
+              
+              <div className="grid grid-cols-2 gap-4">
+                {allDishes
+                  .filter((d: Dish) => d.category === dish.category && d.id !== dish.id)
+                  .slice(0, 2)
+                  .map((similarDish: Dish) => (
+                    <div 
+                      key={similarDish.id}
+                      className="bg-card rounded-xl overflow-hidden border border-border/40 cursor-pointer hover:border-primary/40 transition-colors"
+                      onClick={() => setLocation(`/dish/${similarDish.id}`)}
+                    >
+                      <div className="h-24 bg-secondary relative">
+                        <img 
+                          src={similarDish.image || "/images/placeholder-dish.jpg"} 
+                          alt={similarDish.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="p-3">
+                        <h4 className="font-serif text-sm font-medium line-clamp-1">{similarDish.name}</h4>
+                        <p className="text-xs text-muted-foreground mt-1">£{similarDish.price}</p>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
           </motion.div>
         </div>
 
         {/* Bottom Action Bar */}
         <div className="fixed bottom-0 left-0 right-0 p-6 bg-background/80 backdrop-blur-lg border-t border-border/50 z-20" style={{ maxWidth: 'inherit', margin: '0 auto' }}>
           <div className="flex gap-4">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-14 w-14 rounded-full border-input shrink-0"
-              onClick={() => {
-                // Find a similar item to compare with (same category, different ID)
-                const similarDish = allDishes.find((d: Dish) => d.category === dish.category && d.id !== dish.id);
-                if (similarDish) {
-                  setLocation(`/compare/${dish.id}/${similarDish.id}`);
-                }
-              }}
-            >
-              <Scale className="w-5 h-5 text-muted-foreground" />
-            </Button>
+
             <div className="flex-1 flex gap-3">
               {cartItem ? (
                 <div className="flex items-center gap-2 bg-secondary rounded-full px-3 h-14">
