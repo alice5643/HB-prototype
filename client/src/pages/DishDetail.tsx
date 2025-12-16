@@ -112,76 +112,72 @@ export default function DishDetail() {
               </div>
             )}
 
-            {/* Post-Add Pairing Suggestions (Only visible when item is in cart) */}
-            {/* Do not change the comparison food dishes here, or fold that, and show the perfect pairings with the dishes in our menus */}
-            {cartItem && (
-              <div className="pt-6 border-t border-border/40">
-                <h3 className="text-lg font-serif text-primary mb-4">Perfect Pairings</h3>
-                <p className="text-sm text-muted-foreground mb-4 italic">Complete your experience with these sides & drinks.</p>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Suggest 1 Side and 1 Drink */}
-                  {[
-                    allDishes.find(d => d.category === 'sides' && d.id !== dish.id),
-                    allDishes.find(d => d.category === 'cocktails' || d.category === 'wine')
-                  ].filter(Boolean).map((pairingDish: any) => (
+            {/* Combined Suggestions Section (Always visible) */}
+            <div className="pt-6 border-t border-border/40">
+              <h3 className="text-lg font-serif text-primary mb-4">Complete Your Experience</h3>
+              <p className="text-sm text-muted-foreground mb-4 italic">
+                it's text only here, should be the sides and wine lists horizontally scrollable and add them together. So show this section with Food comparision together , not just show this after food added to table
+              </p>
+              
+              <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 scrollbar-hide">
+                {/* 1. Perfect Pairings (Sides & Drinks) */}
+                {[
+                  allDishes.find(d => d.category === 'sides' && d.id !== dish.id),
+                  allDishes.find(d => d.category === 'cocktails' || d.category === 'wine')
+                ].filter(Boolean).map((pairingDish: any) => (
+                  <div 
+                    key={`pairing-${pairingDish.id}`}
+                    className="min-w-[160px] w-[160px] bg-card rounded-xl overflow-hidden border border-border/40 cursor-pointer hover:border-primary/40 transition-colors flex-shrink-0"
+                    onClick={() => setLocation(`/dish/${pairingDish.id}`)}
+                  >
+                    <div className="h-24 bg-secondary relative">
+                      <img 
+                        src={pairingDish.image || "/images/placeholder-dish.jpg"} 
+                        alt={pairingDish.name}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm rounded-full p-1">
+                        <Plus className="w-3 h-3 text-primary" />
+                      </div>
+                      <div className="absolute bottom-2 left-2 bg-primary/90 text-primary-foreground text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-medium">
+                        Pairing
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <h4 className="font-serif text-sm font-medium line-clamp-1">{pairingDish.name}</h4>
+                      <p className="text-xs text-muted-foreground mt-1">£{pairingDish.price}</p>
+                    </div>
+                  </div>
+                ))}
+
+                {/* 2. Similar Dishes (Comparison) */}
+                {allDishes
+                  .filter((d: Dish) => d.category === dish.category && d.id !== dish.id)
+                  .slice(0, 3)
+                  .map((similarDish: Dish) => (
                     <div 
-                      key={pairingDish.id}
-                      className="bg-card rounded-xl overflow-hidden border border-border/40 cursor-pointer hover:border-primary/40 transition-colors"
-                      onClick={() => setLocation(`/dish/${pairingDish.id}`)}
+                      key={`similar-${similarDish.id}`}
+                      className="min-w-[160px] w-[160px] bg-card rounded-xl overflow-hidden border border-border/40 cursor-pointer hover:border-primary/40 transition-colors flex-shrink-0"
+                      onClick={() => setLocation(`/dish/${similarDish.id}`)}
                     >
                       <div className="h-24 bg-secondary relative">
                         <img 
-                          src={pairingDish.image || "/images/placeholder-dish.jpg"} 
-                          alt={pairingDish.name}
+                          src={similarDish.image || "/images/placeholder-dish.jpg"} 
+                          alt={similarDish.name}
                           className="w-full h-full object-cover"
                         />
-                        <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm rounded-full p-1">
-                          <Plus className="w-3 h-3 text-primary" />
+                        <div className="absolute bottom-2 left-2 bg-secondary/90 text-secondary-foreground text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-medium">
+                          Similar
                         </div>
                       </div>
                       <div className="p-3">
-                        <h4 className="font-serif text-sm font-medium line-clamp-1">{pairingDish.name}</h4>
-                        <p className="text-xs text-muted-foreground mt-1">£{pairingDish.price}</p>
+                        <h4 className="font-serif text-sm font-medium line-clamp-1">{similarDish.name}</h4>
+                        <p className="text-xs text-muted-foreground mt-1">£{similarDish.price}</p>
                       </div>
                     </div>
                   ))}
-                </div>
               </div>
-            )}
-
-            {/* Embedded Comparison Section (Only visible when NOT in cart) */}
-            {!cartItem && (
-              <div className="pt-6 border-t border-border/40">
-                <h3 className="text-lg font-serif text-primary mb-4">Try a different flavor</h3>
-                <p className="text-sm text-muted-foreground mb-4 italic">Choose what fits your mood.</p>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  {allDishes
-                    .filter((d: Dish) => d.category === dish.category && d.id !== dish.id)
-                    .slice(0, 2)
-                    .map((similarDish: Dish) => (
-                      <div 
-                        key={similarDish.id}
-                        className="bg-card rounded-xl overflow-hidden border border-border/40 cursor-pointer hover:border-primary/40 transition-colors"
-                        onClick={() => setLocation(`/dish/${similarDish.id}`)}
-                      >
-                        <div className="h-24 bg-secondary relative">
-                          <img 
-                            src={similarDish.image || "/images/placeholder-dish.jpg"} 
-                            alt={similarDish.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="p-3">
-                          <h4 className="font-serif text-sm font-medium line-clamp-1">{similarDish.name}</h4>
-                          <p className="text-xs text-muted-foreground mt-1">£{similarDish.price}</p>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            )}
+            </div>
           </motion.div>
         </div>
 
