@@ -92,7 +92,8 @@ export default function Layout({ children, showHeader = true, title }: LayoutPro
                   </button>
                 </div>
 
-                <ScrollArea className="flex-1 px-6">
+                {/* Scrollable Content Area - Explicitly constrained */}
+                <div className="flex-1 overflow-y-auto px-6 min-h-0">
                   <div className="space-y-6 pb-6">
                     {cart.length === 0 ? (
                       <div className="text-center py-12 text-muted-foreground">
@@ -133,10 +134,10 @@ export default function Layout({ children, showHeader = true, title }: LayoutPro
                       ))
                     )}
                   </div>
-                </ScrollArea>
+                </div>
 
                 {/* Sticky Footer - Flex Item */}
-                <div className="flex-shrink-0 p-6 pt-4 border-t border-border bg-background z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+                <div className="flex-shrink-0 p-6 pt-4 border-t border-border bg-background z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] mt-auto">
                   <div className="space-y-4">
                     <div className="bg-secondary/30 p-4 rounded-xl">
                       <p className="text-sm text-muted-foreground text-center italic">
