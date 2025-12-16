@@ -38,11 +38,16 @@ export default function DishDetail() {
   if (!dish) return null;
 
   // Get recommendations (6 items mixed from sides, drinks, and similar category)
-  const recommendations = [
+  // Use a Map to deduplicate items by ID since categories might overlap (e.g. if current dish is a side)
+  const rawRecommendations = [
     ...allDishes.filter(d => d.category === 'sides' && d.id !== dish.id).slice(0, 2),
     ...allDishes.filter(d => (d.category === 'cocktails' || d.category === 'wine') && d.id !== dish.id).slice(0, 2),
     ...allDishes.filter(d => d.category === dish.category && d.id !== dish.id).slice(0, 2)
-  ].map(item => ({
+  ];
+
+  const uniqueRecommendations = Array.from(new Map(rawRecommendations.map(item => [item.id, item])).values());
+
+  const recommendations = uniqueRecommendations.map(item => ({
     ...item,
     tag: item.category === 'sides' ? 'Side' : 
          (item.category === 'cocktails' || item.category === 'wine') ? 'Drink' : 'Try this'
