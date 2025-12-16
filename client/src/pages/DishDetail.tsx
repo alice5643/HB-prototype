@@ -101,11 +101,11 @@ export default function DishDetail() {
             variant="ghost" 
             size="icon" 
             onClick={() => {
-              if (window.history.length > 1) {
-                window.history.back();
-              } else {
-                setLocation("/menus");
-              }
+              // Deterministic navigation back to the parent menu
+              const parentMenuId = ['starters', 'mains', 'desserts', 'sides'].includes(dish.category) 
+                ? 'alacarte' 
+                : 'drinks';
+              setLocation(`/menu/${parentMenuId}`);
             }}
             className="absolute top-6 left-6 rounded-full bg-background/20 backdrop-blur-md text-foreground hover:bg-background/40"
           >
