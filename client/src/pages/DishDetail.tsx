@@ -32,8 +32,17 @@ export default function DishDetail() {
   if (!dish) return null;
 
   const handleAddToCart = () => {
-    addToCart(dish);
-    // Do not redirect, stay on page to show pairing suggestions
+    if (cartItem) {
+      // If already in cart, just update quantity in store (which is already done by the +/- buttons)
+      // and maybe show a toast or feedback, but the button itself is just a confirmation
+      // For now, we can just ensure the quantity is synced if we were managing local state separately
+      // But here we are using the store directly for updates via the +/- buttons
+      // So this button acts more like a "Done" or "Confirm" action
+      window.history.back();
+    } else {
+      addToCart(dish);
+      // Do not redirect, stay on page to show pairing suggestions
+    }
   };
 
   return (
@@ -184,7 +193,7 @@ export default function DishDetail() {
               {cartItem ? (
                 <div className="flex items-center gap-2 bg-secondary rounded-full px-3 h-14">
                   <button 
-                    onClick={() => updateQuantity(dish.id, quantity - 1)}
+                    onClick={() => updateQuantity(dish.id, Math.max(0, quantity - 1))}
                     className="w-8 h-8 flex items-center justify-center rounded-full bg-background shadow-sm active:scale-95"
                   >
                     <Minus className="w-4 h-4" />
