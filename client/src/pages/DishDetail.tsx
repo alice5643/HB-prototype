@@ -105,11 +105,7 @@ export default function DishDetail() {
 
             {/* Post-Add Pairing Suggestions (Only visible when item is in cart) */}
             {cartItem && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                className="pt-6 border-t border-border/40"
-              >
+              <div className="pt-6 border-t border-border/40">
                 <h3 className="text-lg font-serif text-primary mb-4">Perfect Pairings</h3>
                 <p className="text-sm text-muted-foreground mb-4 italic">Complete your experience with these sides & drinks.</p>
                 
@@ -141,7 +137,7 @@ export default function DishDetail() {
                     </div>
                   ))}
                 </div>
-              </motion.div>
+              </div>
             )}
 
             {/* Embedded Comparison Section (Only visible when NOT in cart) */}
