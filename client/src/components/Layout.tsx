@@ -84,15 +84,15 @@ export default function Layout({ children, showHeader = true, title }: LayoutPro
               className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] border-t border-white/20 max-h-[85vh] flex flex-col"
               style={{ maxWidth: 'inherit', margin: '0 auto' }} // Inherit max-width from parent #root
             >
-              <div className="p-6 flex-1 flex flex-col overflow-hidden">
-                <div className="flex items-center justify-between mb-6">
+              <div className="flex-1 flex flex-col overflow-hidden relative">
+                <div className="p-6 pb-0 flex items-center justify-between mb-4 flex-shrink-0">
                   <h2 className="font-serif text-2xl text-primary">Table Order</h2>
                   <button onClick={() => setIsTrayOpen(false)} className="p-2 hover:bg-secondary rounded-full">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
-                <ScrollArea className="flex-1 -mx-6 px-6">
+                <ScrollArea className="flex-1 px-6">
                   <div className="space-y-6 pb-8">
                     {cart.length === 0 ? (
                       <div className="text-center py-12 text-muted-foreground">
@@ -136,8 +136,7 @@ export default function Layout({ children, showHeader = true, title }: LayoutPro
                 </ScrollArea>
 
                 {/* Sticky Footer */}
-                {/* Sticky Footer */}
-                <div className="flex-shrink-0 pt-4 border-t border-border bg-background z-10 pb-6">
+                <div className="flex-shrink-0 p-6 pt-4 border-t border-border bg-background z-10">
                   <div className="space-y-4">
                     <div className="bg-secondary/30 p-4 rounded-xl">
                       <p className="text-sm text-muted-foreground text-center italic">

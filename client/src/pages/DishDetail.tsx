@@ -33,9 +33,7 @@ export default function DishDetail() {
 
   const handleAddToCart = () => {
     addToCart(dish);
-    // Determine which menu to return to based on dish category
-    const menuId = menus.find(m => m.data?.some(s => s.items.some(i => i.id === dish.id)))?.id || "alacarte";
-    setLocation(`/menu/${menuId}`);
+    // Do not redirect, stay on page to show pairing suggestions
   };
 
   return (
@@ -105,36 +103,79 @@ export default function DishDetail() {
               </div>
             )}
 
-            {/* Embedded Comparison Section */}
-            <div className="pt-6 border-t border-border/40">
-              <h3 className="text-lg font-serif text-primary mb-4">Try a different flavor</h3>
-              <p className="text-sm text-muted-foreground mb-4 italic">Choose what fits your mood.</p>
-              
-              <div className="grid grid-cols-2 gap-4">
-                {allDishes
-                  .filter((d: Dish) => d.category === dish.category && d.id !== dish.id)
-                  .slice(0, 2)
-                  .map((similarDish: Dish) => (
+            {/* Post-Add Pairing Suggestions (Only visible when item is in cart) */}
+            {cartItem && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="pt-6 border-t border-border/40"
+              >
+                <h3 className="text-lg font-serif text-primary mb-4">Perfect Pairings</h3>
+                <p className="text-sm text-muted-foreground mb-4 italic">Complete your experience with these sides & drinks.</p>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Suggest 1 Side and 1 Drink */}
+                  {[
+                    allDishes.find(d => d.category === 'sides' && d.id !== dish.id),
+                    allDishes.find(d => d.category === 'cocktails' || d.category === 'wine')
+                  ].filter(Boolean).map((pairingDish: any) => (
                     <div 
-                      key={similarDish.id}
+                      key={pairingDish.id}
                       className="bg-card rounded-xl overflow-hidden border border-border/40 cursor-pointer hover:border-primary/40 transition-colors"
-                      onClick={() => setLocation(`/dish/${similarDish.id}`)}
+                      onClick={() => setLocation(`/dish/${pairingDish.id}`)}
                     >
                       <div className="h-24 bg-secondary relative">
                         <img 
-                          src={similarDish.image || "/images/placeholder-dish.jpg"} 
-                          alt={similarDish.name}
+                          src={pairingDish.image || "/images/placeholder-dish.jpg"} 
+                          alt={pairingDish.name}
                           className="w-full h-full object-cover"
                         />
+                        <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm rounded-full p-1">
+                          <Plus className="w-3 h-3 text-primary" />
+                        </div>
                       </div>
                       <div className="p-3">
-                        <h4 className="font-serif text-sm font-medium line-clamp-1">{similarDish.name}</h4>
-                        <p className="text-xs text-muted-foreground mt-1">£{similarDish.price}</p>
+                        <h4 className="font-serif text-sm font-medium line-clamp-1">{pairingDish.name}</h4>
+                        <p className="text-xs text-muted-foreground mt-1">£{pairingDish.price}</p>
                       </div>
                     </div>
                   ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Embedded Comparison Section (Only visible when NOT in cart) */}
+            {!cartItem && (
+              <div className="pt-6 border-t border-border/40">
+                <h3 className="text-lg font-serif text-primary mb-4">Try a different flavor</h3>
+                <p className="text-sm text-muted-foreground mb-4 italic">Choose what fits your mood.</p>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {allDishes
+                    .filter((d: Dish) => d.category === dish.category && d.id !== dish.id)
+                    .slice(0, 2)
+                    .map((similarDish: Dish) => (
+                      <div 
+                        key={similarDish.id}
+                        className="bg-card rounded-xl overflow-hidden border border-border/40 cursor-pointer hover:border-primary/40 transition-colors"
+                        onClick={() => setLocation(`/dish/${similarDish.id}`)}
+                      >
+                        <div className="h-24 bg-secondary relative">
+                          <img 
+                            src={similarDish.image || "/images/placeholder-dish.jpg"} 
+                            alt={similarDish.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="p-3">
+                          <h4 className="font-serif text-sm font-medium line-clamp-1">{similarDish.name}</h4>
+                          <p className="text-xs text-muted-foreground mt-1">£{similarDish.price}</p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
               </div>
-            </div>
+            )}
           </motion.div>
         </div>
 
