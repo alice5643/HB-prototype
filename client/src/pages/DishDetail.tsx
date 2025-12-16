@@ -133,7 +133,7 @@ export default function DishDetail() {
                 ].filter(Boolean).map((pairingDish: any) => (
                   <div 
                     key={`pairing-${pairingDish.id}`}
-                    className="min-w-[160px] w-[160px] bg-card rounded-xl overflow-hidden border border-border/40 cursor-pointer hover:border-primary/40 transition-colors flex-shrink-0"
+                    className="min-w-[160px] w-[160px] bg-card rounded-xl overflow-hidden border border-border/40 cursor-pointer hover:border-primary/40 transition-colors flex-shrink-0 relative group"
                     onClick={() => setLocation(`/dish/${pairingDish.id}`)}
                   >
                     <div className="h-24 bg-secondary relative">
@@ -142,9 +142,16 @@ export default function DishDetail() {
                         alt={pairingDish.name}
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm rounded-full p-1">
-                        <Plus className="w-3 h-3 text-primary" />
-                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart(pairingDish);
+                          // Optional: Add toast notification here
+                        }}
+                        className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm rounded-full p-2 hover:bg-primary hover:text-primary-foreground transition-colors z-10"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
                       <div className="absolute bottom-2 left-2 bg-primary/90 text-primary-foreground text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-medium">
                         Pairing
                       </div>
