@@ -135,24 +135,27 @@ export default function Layout({ children, showHeader = true, title }: LayoutPro
                   </div>
                 </ScrollArea>
 
-                <div className="mt-6 space-y-4 pt-4 border-t border-border">
-                  <div className="bg-secondary/30 p-4 rounded-xl">
-                    <p className="text-sm text-muted-foreground text-center italic">
-                      "A member of staff will confirm everything with you."
-                    </p>
+                {/* Sticky Footer */}
+                <div className="mt-auto pt-4 border-t border-border bg-background z-10">
+                  <div className="space-y-4">
+                    <div className="bg-secondary/30 p-4 rounded-xl">
+                      <p className="text-sm text-muted-foreground text-center italic">
+                        "A member of staff will confirm everything with you."
+                      </p>
+                    </div>
+                    
+                    <Button 
+                      className="w-full btn-primary h-14 text-lg"
+                      disabled={cart.length === 0}
+                      onClick={() => {
+                        submitOrder();
+                        setIsTrayOpen(false);
+                        setLocation("/order-draft");
+                      }}
+                    >
+                      Ask staff to confirm order
+                    </Button>
                   </div>
-                  
-                  <Button 
-                    className="w-full btn-primary h-14 text-lg"
-                    disabled={cart.length === 0}
-                    onClick={() => {
-                      submitOrder();
-                      setIsTrayOpen(false);
-                      setLocation("/order-draft");
-                    }}
-                  >
-                    Ask staff to confirm order
-                  </Button>
                 </div>
               </div>
             </motion.div>

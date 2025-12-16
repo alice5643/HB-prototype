@@ -33,7 +33,9 @@ export default function DishDetail() {
 
   const handleAddToCart = () => {
     addToCart(dish);
-    setLocation("/menu");
+    // Determine which menu to return to based on dish category
+    const menuId = menus.find(m => m.data?.some(s => s.items.some(i => i.id === dish.id)))?.id || "alacarte";
+    setLocation(`/menu/${menuId}`);
   };
 
   return (
@@ -122,30 +124,32 @@ export default function DishDetail() {
             >
               <Scale className="w-5 h-5 text-muted-foreground" />
             </Button>
-            {cartItem ? (
-              <div className="flex items-center gap-4 bg-secondary rounded-full px-4 h-14 flex-1 justify-between">
-                <button 
-                  onClick={() => updateQuantity(dish.id, quantity - 1)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-background shadow-sm active:scale-95"
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-                <span className="font-medium text-lg">{quantity}</span>
-                <button 
-                  onClick={() => updateQuantity(dish.id, quantity + 1)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-background shadow-sm active:scale-95"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
+            <div className="flex-1 flex gap-3">
+              {cartItem ? (
+                <div className="flex items-center gap-2 bg-secondary rounded-full px-3 h-14">
+                  <button 
+                    onClick={() => updateQuantity(dish.id, quantity - 1)}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-background shadow-sm active:scale-95"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="font-medium text-lg w-6 text-center">{quantity}</span>
+                  <button 
+                    onClick={() => updateQuantity(dish.id, quantity + 1)}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-background shadow-sm active:scale-95"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : null}
+              
               <Button 
                 className="flex-1 h-14 rounded-full text-lg btn-primary"
                 onClick={handleAddToCart}
               >
-                Add to Table
+                {cartItem ? "Update Table" : "Add to Table"}
               </Button>
-            )}
+            </div>
           </div>
         </div>
       </div>
