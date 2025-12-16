@@ -63,6 +63,38 @@ export const aLaCarteMenuData: MenuSection[] = [
     ]
   },
   {
+    id: "sides",
+    title: "Sides",
+    description: "Perfect additions to your meal.",
+    items: [
+      {
+        id: "s1",
+        name: "Truffle Fries",
+        description: "Parmesan, truffle oil, chives.",
+        price: 8,
+        category: "sides",
+        image: "/images/dish3.jpg",
+        tags: ["Crispy", "Vegetarian"],
+        allergens: ["Dairy"],
+        isVegetarian: true,
+        isGlutenFree: true
+      },
+      {
+        id: "s2",
+        name: "Charred Broccolini",
+        description: "Chili, garlic, lemon.",
+        price: 9,
+        category: "sides",
+        image: "/images/dish2.jpg",
+        tags: ["Spicy", "Vegan"],
+        allergens: [],
+        isVegetarian: true,
+        isVegan: true,
+        isGlutenFree: true
+      }
+    ]
+  },
+  {
     id: "mains",
     title: "Main Courses",
     description: "Substantial dishes, perfect for sharing or enjoying solo.",
@@ -146,7 +178,7 @@ export const drinksMenuData: MenuSection[] = [
         name: "Yuzu Highball",
         description: "Japanese whisky, fresh yuzu, soda, shiso leaf.",
         price: 14,
-        category: "drinks",
+        category: "cocktails",
         tags: ["Refreshing", "Citrus"],
         pairingSuggestion: "Perfect with the Cured Hamachi."
       },
@@ -155,7 +187,7 @@ export const drinksMenuData: MenuSection[] = [
         name: "Smoked Old Fashioned",
         description: "Bourbon, maple syrup, angostura bitters, hickory smoke.",
         price: 16,
-        category: "drinks",
+        category: "cocktails",
         tags: ["Strong", "Smoky"],
         pairingSuggestion: "Pairs well with the Duck Breast."
       }
@@ -171,7 +203,7 @@ export const drinksMenuData: MenuSection[] = [
         name: "Sancerre, Domaine Vacheron",
         description: "Loire Valley, France. Crisp, mineral, citrus notes.",
         price: 15,
-        category: "drinks",
+        category: "wine",
         tags: ["White", "Dry"],
         pairingSuggestion: "Excellent with the Pan-Seared Scallops."
       },
@@ -180,7 +212,7 @@ export const drinksMenuData: MenuSection[] = [
         name: "Pinot Noir, Felton Road",
         description: "Central Otago, NZ. Red cherry, spice, earthy.",
         price: 18,
-        category: "drinks",
+        category: "wine",
         tags: ["Red", "Light"],
         pairingSuggestion: "Try this with the Roasted Beetroot."
       }
