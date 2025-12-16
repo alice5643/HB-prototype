@@ -104,6 +104,7 @@ export default function DishDetail() {
             )}
 
             {/* Post-Add Pairing Suggestions (Only visible when item is in cart) */}
+            {/* Do not change the comparison food dishes here, or fold that, and show the perfect pairings with the dishes in our menus */}
             {cartItem && (
               <div className="pt-6 border-t border-border/40">
                 <h3 className="text-lg font-serif text-primary mb-4">Perfect Pairings</h3>
