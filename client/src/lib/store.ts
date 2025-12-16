@@ -8,6 +8,8 @@ export type SharingModel = 'sharing' | 'separate' | 'mix';
 interface CartItem extends Dish {
   quantity: number;
   notes?: string;
+  selectedVariationId?: string;
+  selectedVariationName?: string;
 }
 
 interface AppState {
@@ -24,9 +26,9 @@ interface AppState {
   // Actions
   setPartySize: (size: PartySize) => void;
   setSharingModel: (model: SharingModel) => void;
-  addToCart: (dish: Dish) => void;
-  removeFromCart: (dishId: string) => void;
-  updateQuantity: (dishId: string, quantity: number) => void;
+  addToCart: (dish: Dish, variationId?: string, variationName?: string, variationPrice?: number) => void;
+  removeFromCart: (dishId: string, variationId?: string) => void;
+  updateQuantity: (dishId: string, quantity: number, variationId?: string) => void;
   submitOrder: () => void;
   resetSession: () => void;
 }
@@ -44,31 +46,51 @@ export const useStore = create<AppState>()(
       setPartySize: (size: PartySize) => set({ partySize: size }),
       setSharingModel: (model: SharingModel) => set({ sharingModel: model, hasVisited: true }),
       
-      addToCart: (dish: Dish) => set((state: AppState) => {
-        const existingItem = state.cart.find((item: CartItem) => item.id === dish.id);
+      addToCart: (dish: Dish, variationId?: string, variationName?: string, variationPrice?: number) => set((state: AppState) => {
+        const existingItem = state.cart.find((item: CartItem) => 
+          item.id === dish.id && item.selectedVariationId === variationId
+        );
+        
         if (existingItem) {
           return {
             cart: state.cart.map((item: CartItem) => 
-              item.id === dish.id 
+              (item.id === dish.id && item.selectedVariationId === variationId)
                 ? { ...item, quantity: item.quantity + 1 } 
                 : item
             )
           };
         }
-        return { cart: [...state.cart, { ...dish, quantity: 1 }] };
+        
+        const newItem = { 
+          ...dish, 
+          quantity: 1,
+          selectedVariationId: variationId,
+          selectedVariationName: variationName,
+          price: variationPrice || dish.price
+        };
+        
+        return { cart: [...state.cart, newItem] };
       }),
       
-      removeFromCart: (dishId: string) => set((state: AppState) => ({
-        cart: state.cart.filter((item: CartItem) => item.id !== dishId)
+      removeFromCart: (dishId: string, variationId?: string) => set((state: AppState) => ({
+        cart: state.cart.filter((item: CartItem) => 
+          !(item.id === dishId && item.selectedVariationId === variationId)
+        )
       })),
       
-      updateQuantity: (dishId: string, quantity: number) => set((state: AppState) => {
+      updateQuantity: (dishId: string, quantity: number, variationId?: string) => set((state: AppState) => {
         if (quantity <= 0) {
-          return { cart: state.cart.filter((item: CartItem) => item.id !== dishId) };
+          return { 
+            cart: state.cart.filter((item: CartItem) => 
+              !(item.id === dishId && item.selectedVariationId === variationId)
+            ) 
+          };
         }
         return {
           cart: state.cart.map((item: CartItem) => 
-            item.id === dishId ? { ...item, quantity } : item
+            (item.id === dishId && item.selectedVariationId === variationId)
+              ? { ...item, quantity } 
+              : item
           )
         };
       }),

@@ -1,3 +1,9 @@
+export interface DishVariation {
+  id: string;
+  name: string;
+  price: number;
+}
+
 export interface Dish {
   id: string;
   name: string;
@@ -11,6 +17,7 @@ export interface Dish {
   isVegan?: boolean;
   isGlutenFree?: boolean;
   pairingSuggestion?: string;
+  variations?: DishVariation[];
 }
 
 export interface MenuSection {
@@ -179,6 +186,7 @@ export const drinksMenuData: MenuSection[] = [
         description: "Japanese whisky, fresh yuzu, soda, shiso leaf.",
         price: 14,
         category: "cocktails",
+        image: "/images/drink-yuzu.webp",
         tags: ["Refreshing", "Citrus"],
         pairingSuggestion: "Perfect with the Cured Hamachi."
       },
@@ -188,6 +196,7 @@ export const drinksMenuData: MenuSection[] = [
         description: "Bourbon, maple syrup, angostura bitters, hickory smoke.",
         price: 16,
         category: "cocktails",
+        image: "/images/drink-old-fashioned.jpg",
         tags: ["Strong", "Smoky"],
         pairingSuggestion: "Pairs well with the Duck Breast."
       }
@@ -204,8 +213,13 @@ export const drinksMenuData: MenuSection[] = [
         description: "Loire Valley, France. Crisp, mineral, citrus notes.",
         price: 15,
         category: "wine",
+        image: "/images/drink-sancerre.jpg",
         tags: ["White", "Dry"],
-        pairingSuggestion: "Excellent with the Pan-Seared Scallops."
+        pairingSuggestion: "Excellent with the Pan-Seared Scallops.",
+        variations: [
+          { id: "glass", name: "Glass (175ml)", price: 15 },
+          { id: "bottle", name: "Bottle (750ml)", price: 65 }
+        ]
       },
       {
         id: "d4",
@@ -213,8 +227,13 @@ export const drinksMenuData: MenuSection[] = [
         description: "Central Otago, NZ. Red cherry, spice, earthy.",
         price: 18,
         category: "wine",
+        image: "/images/drink-pinot.jpg",
         tags: ["Red", "Light"],
-        pairingSuggestion: "Try this with the Roasted Beetroot."
+        pairingSuggestion: "Try this with the Roasted Beetroot.",
+        variations: [
+          { id: "glass", name: "Glass (175ml)", price: 18 },
+          { id: "bottle", name: "Bottle (750ml)", price: 85 }
+        ]
       }
     ]
   },
@@ -229,15 +248,21 @@ export const drinksMenuData: MenuSection[] = [
         description: "Fresh lemon, mint, soda.",
         price: 6,
         category: "drinks",
+        image: "/images/drink-lemonade.jpg",
         tags: ["Non-Alcoholic"],
       },
       {
         id: "d6",
         name: "Sparkling Water",
-        description: "750ml bottle.",
+        description: "Premium mineral water.",
         price: 5,
         category: "drinks",
+        image: "/images/drink-sparkling.jpg",
         tags: ["Non-Alcoholic"],
+        variations: [
+          { id: "glass", name: "Glass", price: 3 },
+          { id: "bottle", name: "Bottle (750ml)", price: 5 }
+        ]
       }
     ]
   }

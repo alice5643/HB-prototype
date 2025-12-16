@@ -25,17 +25,31 @@ export default function DishDetail() {
   // Search across all menus
   const allDishes = menus.flatMap(menu => menu.data || []).flatMap((section: MenuSection) => section.items);
   const dish = allDishes.find((item: Dish) => item.id === dishId);
-    
-  // Check if already in cart
-  const cartItem = cart.find(item => item.id === dishId);
+  
+  // State for selected variation (default to first one if available)
+  const [selectedVariationId, setSelectedVariationId] = useState<string | undefined>(
+    dish?.variations?.[0]?.id
+  );
+
+  // Check if already in cart (matching both dish ID and variation)
+  const cartItem = cart.find(item => 
+    item.id === dishId && 
+    (!dish?.variations || item.selectedVariationId === selectedVariationId)
+  );
   
   useEffect(() => {
     if (cartItem) {
       setQuantity(cartItem.quantity);
+    } else {
+      setQuantity(1);
     }
-  }, [cartItem]);
+  }, [cartItem, selectedVariationId]);
 
   if (!dish) return null;
+
+  const currentPrice = selectedVariationId 
+    ? dish.variations?.find(v => v.id === selectedVariationId)?.price || dish.price
+    : dish.price;
 
   // Get recommendations (6 items mixed from sides, drinks, and similar category)
   // Use a Map to deduplicate items by ID since categories might overlap (e.g. if current dish is a side)
@@ -55,14 +69,15 @@ export default function DishDetail() {
 
   const handleAddToCart = () => {
     if (cartItem) {
-      // If already in cart, just update quantity in store (which is already done by the +/- buttons)
-      // and maybe show a toast or feedback, but the button itself is just a confirmation
-      // For now, we can just ensure the quantity is synced if we were managing local state separately
-      // But here we are using the store directly for updates via the +/- buttons
-      // So this button acts more like a "Done" or "Confirm" action
       window.history.back();
     } else {
-      addToCart(dish);
+      const variation = dish.variations?.find(v => v.id === selectedVariationId);
+      addToCart(
+        dish, 
+        selectedVariationId, 
+        variation?.name, 
+        variation?.price
+      );
       // Do not redirect, stay on page to show pairing suggestions
     }
   };
@@ -109,7 +124,7 @@ export default function DishDetail() {
             <div className="space-y-2">
               <div className="flex justify-between items-start">
                 <h1 className="text-4xl font-serif text-primary leading-tight">{dish.name}</h1>
-                <span className="text-xl font-mono text-muted-foreground mt-2">£{dish.price}</span>
+                <span className="text-xl font-mono text-muted-foreground mt-2">£{currentPrice}</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {dish.tags.map((tag: string) => (
@@ -123,6 +138,30 @@ export default function DishDetail() {
             <p className="text-lg text-muted-foreground leading-relaxed font-serif">
               {dish.description}
             </p>
+
+            {/* Variation Selector */}
+            {dish.variations && (
+              <div className="space-y-3 pt-2">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Select Size</h3>
+                <div className="flex flex-wrap gap-3">
+                  {dish.variations.map((variation) => (
+                    <button
+                      key={variation.id}
+                      onClick={() => setSelectedVariationId(variation.id)}
+                      className={`
+                        flex items-center justify-between px-4 py-3 rounded-xl border transition-all min-w-[140px]
+                        ${selectedVariationId === variation.id 
+                          ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
+                          : "border-border bg-card hover:border-primary/50 text-muted-foreground"}
+                      `}
+                    >
+                      <span className="font-medium">{variation.name}</span>
+                      <span className="text-sm ml-2">£{variation.price}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {dish.pairingSuggestion && (
               <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
@@ -223,14 +262,14 @@ export default function DishDetail() {
               {cartItem ? (
                 <div className="flex items-center gap-2 bg-secondary rounded-full px-3 h-14">
                   <button 
-                    onClick={() => updateQuantity(dish.id, Math.max(0, quantity - 1))}
+                    onClick={() => updateQuantity(dish.id, Math.max(0, quantity - 1), selectedVariationId)}
                     className="w-8 h-8 flex items-center justify-center rounded-full bg-background shadow-sm active:scale-95"
                   >
                     <Minus className="w-4 h-4" />
                   </button>
                   <span className="font-medium text-lg w-6 text-center">{quantity}</span>
                   <button 
-                    onClick={() => updateQuantity(dish.id, quantity + 1)}
+                    onClick={() => updateQuantity(dish.id, quantity + 1, selectedVariationId)}
                     className="w-8 h-8 flex items-center justify-center rounded-full bg-background shadow-sm active:scale-95"
                   >
                     <Plus className="w-4 h-4" />
