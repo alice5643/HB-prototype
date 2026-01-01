@@ -7,11 +7,11 @@ import { Button } from "@/components/ui/button";
 
 // Mock order data matching the simulator context
 const mockOrderItems = [
-  { id: 1, name: "Wagyu Ribeye", price: 688, type: "food", guest: "Guest A" },
-  { id: 2, name: "Truffle Pasta", price: 288, type: "food", guest: "Guest B" },
-  { id: 3, name: "2015 Château Margaux", price: 2200, type: "drink", guest: "Guest A" },
-  { id: 4, name: "Caesar Salad", price: 128, type: "food", guest: "Guest B" },
-  { id: 5, name: "Bread Basket", price: 58, type: "food", guest: "Shared" },
+  { id: 1, name: "Wagyu Ribeye", price: 85, type: "food", guest: "Guest A" },
+  { id: 2, name: "Truffle Pasta", price: 32, type: "food", guest: "Guest B" },
+  { id: 3, name: "2015 Château Margaux", price: 450, type: "drink", guest: "Guest A" },
+  { id: 4, name: "Caesar Salad", price: 18, type: "food", guest: "Guest B" },
+  { id: 5, name: "Bread Basket", price: 8, type: "food", guest: "Shared" },
 ];
 
 export default function Payment() {
@@ -92,14 +92,12 @@ export default function Payment() {
               className="space-y-4 overflow-hidden"
             >
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Food</span>
-                  <span>¥{foodTotal}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Drinks</span>
-                  <span>¥{drinkTotal}</span>
-                </div>
+                {mockOrderItems.map((item) => (
+                  <div key={item.id} className="flex justify-between">
+                    <span className="text-muted-foreground">{item.name}</span>
+                    <span>£{item.price}</span>
+                  </div>
+                ))}
               </div>
               
               <div className="h-[1px] bg-border/50" />
@@ -107,11 +105,11 @@ export default function Payment() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between font-medium">
                   <span>Subtotal</span>
-                  <span>¥{subtotal}</span>
+                  <span>£{subtotal}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Service Charge (10%)</span>
-                  <span>¥{serviceCharge}</span>
+                  <span>£{serviceCharge}</span>
                 </div>
               </div>
               <div className="h-[1px] bg-border/50" />
@@ -123,9 +121,9 @@ export default function Payment() {
         <div className="flex justify-between items-end">
           <span className="font-serif text-xl text-primary">Total</span>
           <div className="text-right">
-            <span className="font-serif text-3xl text-primary">¥{total}</span>
+            <span className="font-serif text-3xl text-primary">£{total}</span>
             {tipOption !== 0 && (
-              <p className="text-xs text-muted-foreground mt-1">Includes Tip ¥{getTipAmount()}</p>
+              <p className="text-xs text-muted-foreground mt-1">Includes Tip £{getTipAmount()}</p>
             )}
           </div>
         </div>
@@ -155,7 +153,7 @@ export default function Payment() {
                 </div>
                 <div className="flex justify-between flex-1">
                   <span>{pct}%</span>
-                  <span className="text-muted-foreground">¥{Math.round(subtotal * (pct / 100))}</span>
+                  <span className="text-muted-foreground">£{Math.round(subtotal * (pct / 100))}</span>
                 </div>
               </div>
             ))}
@@ -244,18 +242,18 @@ export default function Payment() {
               <div className="space-y-3 p-4 bg-secondary/20 rounded-lg">
                 <div className="flex justify-between font-medium text-sm">
                   <span>Guest A</span>
-                  <span>¥{guestA.total}</span>
+                  <span>£{guestA.total}</span>
                 </div>
                 <div className="space-y-1 text-xs text-muted-foreground">
                   {guestA.items.map(item => (
                     <div key={item.id} className="flex justify-between">
                       <span>{item.name}</span>
-                      <span>¥{item.price}</span>
+                      <span>£{item.price}</span>
                     </div>
                   ))}
                   <div className="flex justify-between italic">
                     <span>Shared Items (1/2)</span>
-                    <span>¥{mockOrderItems.filter(i => i.guest === 'Shared').reduce((sum, i) => sum + i.price, 0) / 2}</span>
+                    <span>£{mockOrderItems.filter(i => i.guest === 'Shared').reduce((sum, i) => sum + i.price, 0) / 2}</span>
                   </div>
                 </div>
               </div>
@@ -264,18 +262,18 @@ export default function Payment() {
               <div className="space-y-3 p-4 bg-secondary/20 rounded-lg">
                 <div className="flex justify-between font-medium text-sm">
                   <span>Guest B</span>
-                  <span>¥{guestB.total}</span>
+                  <span>£{guestB.total}</span>
                 </div>
                 <div className="space-y-1 text-xs text-muted-foreground">
                   {guestB.items.map(item => (
                     <div key={item.id} className="flex justify-between">
                       <span>{item.name}</span>
-                      <span>¥{item.price}</span>
+                      <span>£{item.price}</span>
                     </div>
                   ))}
                   <div className="flex justify-between italic">
                     <span>Shared Items (1/2)</span>
-                    <span>¥{mockOrderItems.filter(i => i.guest === 'Shared').reduce((sum, i) => sum + i.price, 0) / 2}</span>
+                    <span>£{mockOrderItems.filter(i => i.guest === 'Shared').reduce((sum, i) => sum + i.price, 0) / 2}</span>
                   </div>
                 </div>
               </div>
