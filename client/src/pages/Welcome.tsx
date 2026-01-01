@@ -46,15 +46,8 @@ export default function Welcome() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
-      {/* Header */}
-      <div className="flex justify-between items-center p-6 z-20">
-        <button className="text-sm text-muted-foreground flex items-center gap-1">
-          ← Back
-        </button>
-        <button className="text-sm text-muted-foreground">
-          Skip
-        </button>
-      </div>
+      {/* Header Spacer */}
+      <div className="h-16" />
 
       {/* Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-10 z-0">

@@ -29,6 +29,7 @@ export default function MenuList() {
           </button>
           <button 
             className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            onClick={() => setLocation("/service")}
           >
             <ConciergeBell className="w-4 h-4" />
             Service

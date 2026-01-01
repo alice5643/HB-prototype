@@ -115,15 +115,6 @@ export default function OrderSummary() {
 
         {/* Bill Breakdown */}
         <div className="border-t border-border pt-6 space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Subtotal</span>
-            <span className="font-mono">£{subtotal.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Service Charge (10%)</span>
-            <span className="font-mono">£{serviceCharge.toFixed(2)}</span>
-          </div>
-          <div className="h-[1px] bg-border/50 my-2" />
           <div className="flex justify-between text-lg font-medium">
             <span className="font-serif text-primary">Total</span>
             <span className="font-mono">£{total.toFixed(2)}</span>

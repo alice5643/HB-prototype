@@ -2,7 +2,7 @@ import { ReactNode, useState } from "react";
 import { useLocation } from "wouter";
 import { useStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, X, ChevronRight, Minus, Plus } from "lucide-react";
+import { ShoppingBag, X, ChevronRight, Minus, Plus, ClipboardList } from "lucide-react";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -50,7 +50,7 @@ export default function Layout({ children, showHeader = true, title }: LayoutPro
                 onClick={() => setIsTrayOpen(true)}
                 className="relative p-2 rounded-full hover:bg-secondary transition-colors"
               >
-                <ShoppingBag className="w-6 h-6 text-foreground" />
+                <ClipboardList className="w-6 h-6 text-foreground" />
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-background">
                   {totalItems}
                 </span>
@@ -149,9 +149,8 @@ export default function Layout({ children, showHeader = true, title }: LayoutPro
                       className="w-full btn-primary h-14 text-lg"
                       disabled={cart.length === 0}
                       onClick={() => {
-                        submitOrder();
                         setIsTrayOpen(false);
-                        setLocation("/order-draft");
+                        setLocation("/order-summary");
                       }}
                     >
                       Ask staff to confirm order
