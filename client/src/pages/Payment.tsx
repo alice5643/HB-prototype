@@ -1,38 +1,66 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, EyeOff, CreditCard, User, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { ArrowLeft, EyeOff, CreditCard, User, Users, Smartphone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+// Mock order data matching the simulator context
+const mockOrderItems = [
+  { id: 1, name: "Wagyu Ribeye", price: 688, type: "food", guest: "Guest A" },
+  { id: 2, name: "Truffle Pasta", price: 288, type: "food", guest: "Guest B" },
+  { id: 3, name: "2015 Château Margaux", price: 2200, type: "drink", guest: "Guest A" },
+  { id: 4, name: "Caesar Salad", price: 128, type: "food", guest: "Guest B" },
+  { id: 5, name: "Bread Basket", price: 58, type: "food", guest: "Shared" },
+];
 
 export default function Payment() {
   const [, setLocation] = useLocation();
+  const [showDetails, setShowDetails] = useState(true);
   const [tipOption, setTipOption] = useState<number | 'custom'>(15);
   const [customTip, setCustomTip] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<'waiter' | 'split' | 'online'>('waiter');
-  const [showDetails, setShowDetails] = useState(true);
 
-  // Mock Bill Data
-  const bill = {
-    food: 2450,
-    drinks: 860,
-    subtotal: 3310,
-    serviceCharge: 331,
-  };
-
+  // Calculate bill totals
+  const foodTotal = mockOrderItems.filter(i => i.type === 'food').reduce((sum, i) => sum + i.price, 0);
+  const drinkTotal = mockOrderItems.filter(i => i.type === 'drink').reduce((sum, i) => sum + i.price, 0);
+  const subtotal = foodTotal + drinkTotal;
+  const serviceCharge = Math.round(subtotal * 0.1);
+  
   const getTipAmount = () => {
     if (tipOption === 'custom') {
-      return parseFloat(customTip) || 0;
+      return Number(customTip) || 0;
     }
-    return Math.round(bill.subtotal * (tipOption / 100));
+    return Math.round(subtotal * (tipOption / 100));
   };
 
-  const total = bill.subtotal + bill.serviceCharge + getTipAmount();
+  const total = subtotal + serviceCharge + getTipAmount();
+
+  // Calculate split bill
+  const getGuestTotal = (guest: string) => {
+    const guestItems = mockOrderItems.filter(i => i.guest === guest);
+    const sharedItems = mockOrderItems.filter(i => i.guest === 'Shared');
+    
+    const guestSubtotal = guestItems.reduce((sum, i) => sum + i.price, 0) + 
+                         (sharedItems.reduce((sum, i) => sum + i.price, 0) / 2); // Split shared items evenly
+    
+    const guestService = Math.round(guestSubtotal * 0.1);
+    const guestTip = Math.round(guestSubtotal * (typeof tipOption === 'number' ? tipOption / 100 : 0)); // Simplified tip for split
+    
+    return {
+      items: guestItems,
+      subtotal: guestSubtotal,
+      total: guestSubtotal + guestService + guestTip
+    };
+  };
+
+  const guestA = getGuestTotal('Guest A');
+  const guestB = getGuestTotal('Guest B');
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
       {/* Header */}
-      <div className="flex justify-between items-center p-6 border-b border-border/50 bg-background/95 backdrop-blur-md sticky top-0 z-30">
+      <div className="bg-background/95 backdrop-blur-md border-b border-border/50 px-6 py-4 flex justify-between items-center sticky top-0 z-30">
         <button 
           className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
           onClick={() => setLocation("/dining-status")}
@@ -57,7 +85,7 @@ export default function Payment() {
         {/* Bill Details */}
         <AnimatePresence>
           {showDetails && (
-            <motion.div 
+            <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
@@ -66,11 +94,11 @@ export default function Payment() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Food</span>
-                  <span>¥{bill.food}</span>
+                  <span>¥{foodTotal}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Drinks</span>
-                  <span>¥{bill.drinks}</span>
+                  <span>¥{drinkTotal}</span>
                 </div>
               </div>
               
@@ -79,11 +107,11 @@ export default function Payment() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between font-medium">
                   <span>Subtotal</span>
-                  <span>¥{bill.subtotal}</span>
+                  <span>¥{subtotal}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Service Charge (10%)</span>
-                  <span>¥{bill.serviceCharge}</span>
+                  <span>¥{serviceCharge}</span>
                 </div>
               </div>
               <div className="h-[1px] bg-border/50" />
@@ -127,7 +155,7 @@ export default function Payment() {
                 </div>
                 <div className="flex justify-between flex-1">
                   <span>{pct}%</span>
-                  <span className="text-muted-foreground">¥{Math.round(bill.subtotal * (pct / 100))}</span>
+                  <span className="text-muted-foreground">¥{Math.round(subtotal * (pct / 100))}</span>
                 </div>
               </div>
             ))}
@@ -164,11 +192,11 @@ export default function Payment() {
               className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${paymentMethod === 'waiter' ? 'border-primary bg-primary/5' : 'border-border'}`}
               onClick={() => setPaymentMethod('waiter')}
             >
-              <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'waiter' ? 'border-primary bg-primary' : 'border-muted-foreground'}`}>
-                {paymentMethod === 'waiter' && <div className="w-2 h-2 bg-white rounded-full" />}
-              </div>
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-muted-foreground" />
+              <User className="w-5 h-5 text-muted-foreground" />
+              <div className="flex items-center gap-3 flex-1">
+                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'waiter' ? 'border-primary bg-primary' : 'border-muted-foreground'}`}>
+                  {paymentMethod === 'waiter' && <div className="w-2 h-2 bg-white rounded-full" />}
+                </div>
                 <span>Pay with Waiter</span>
               </div>
             </div>
@@ -177,11 +205,11 @@ export default function Payment() {
               className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${paymentMethod === 'split' ? 'border-primary bg-primary/5' : 'border-border'}`}
               onClick={() => setPaymentMethod('split')}
             >
-              <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'split' ? 'border-primary bg-primary' : 'border-muted-foreground'}`}>
-                {paymentMethod === 'split' && <div className="w-2 h-2 bg-white rounded-full" />}
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-muted-foreground" />
+              <Users className="w-5 h-5 text-muted-foreground" />
+              <div className="flex items-center gap-3 flex-1">
+                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'split' ? 'border-primary bg-primary' : 'border-muted-foreground'}`}>
+                  {paymentMethod === 'split' && <div className="w-2 h-2 bg-white rounded-full" />}
+                </div>
                 <span>Split Bill</span>
               </div>
             </div>
@@ -190,70 +218,64 @@ export default function Payment() {
               className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${paymentMethod === 'online' ? 'border-primary bg-primary/5' : 'border-border'}`}
               onClick={() => setPaymentMethod('online')}
             >
-              <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'online' ? 'border-primary bg-primary' : 'border-muted-foreground'}`}>
-                {paymentMethod === 'online' && <div className="w-2 h-2 bg-white rounded-full" />}
-              </div>
-              <div className="flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-muted-foreground" />
+              <Smartphone className="w-5 h-5 text-muted-foreground" />
+              <div className="flex items-center gap-3 flex-1">
+                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'online' ? 'border-primary bg-primary' : 'border-muted-foreground'}`}>
+                  {paymentMethod === 'online' && <div className="w-2 h-2 bg-white rounded-full" />}
+                </div>
                 <span>Online Payment (Beta)</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Split Bill View */}
+        {/* Split Bill Details */}
         <AnimatePresence>
           {paymentMethod === 'split' && (
-            <motion.div 
+            <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="bg-secondary/30 rounded-xl p-4 border border-border/30 space-y-4 overflow-hidden"
+              className="space-y-6 pt-4 border-t border-border/50"
             >
               <h3 className="font-medium text-foreground">Split Bill Details</h3>
               
               {/* Guest A */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm font-medium">
+              <div className="space-y-3 p-4 bg-secondary/20 rounded-lg">
+                <div className="flex justify-between font-medium text-sm">
                   <span>Guest A</span>
-                  <span>¥1,820</span>
+                  <span>¥{guestA.total}</span>
                 </div>
-                <div className="pl-4 text-xs text-muted-foreground space-y-1">
-                  <div className="flex justify-between">
-                    <span>Wagyu Ribeye</span>
-                    <span>¥688</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Château Margaux (Glass)</span>
-                    <span>¥450</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Subtotal + Service</span>
-                    <span>¥1,251</span>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  {guestA.items.map(item => (
+                    <div key={item.id} className="flex justify-between">
+                      <span>{item.name}</span>
+                      <span>¥{item.price}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between italic">
+                    <span>Shared Items (1/2)</span>
+                    <span>¥{mockOrderItems.filter(i => i.guest === 'Shared').reduce((sum, i) => sum + i.price, 0) / 2}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="h-[1px] bg-border/50" />
-
               {/* Guest B */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm font-medium">
+              <div className="space-y-3 p-4 bg-secondary/20 rounded-lg">
+                <div className="flex justify-between font-medium text-sm">
                   <span>Guest B</span>
-                  <span>¥1,821</span>
+                  <span>¥{guestB.total}</span>
                 </div>
-                <div className="pl-4 text-xs text-muted-foreground space-y-1">
-                  <div className="flex justify-between">
-                    <span>Truffle Pasta</span>
-                    <span>¥488</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Cocktail Pairing</span>
-                    <span>¥380</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Subtotal + Service</span>
-                    <span>¥954</span>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  {guestB.items.map(item => (
+                    <div key={item.id} className="flex justify-between">
+                      <span>{item.name}</span>
+                      <span>¥{item.price}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between italic">
+                    <span>Shared Items (1/2)</span>
+                    <span>¥{mockOrderItems.filter(i => i.guest === 'Shared').reduce((sum, i) => sum + i.price, 0) / 2}</span>
                   </div>
                 </div>
               </div>
@@ -263,13 +285,8 @@ export default function Payment() {
       </div>
 
       {/* Bottom Action */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-background/95 backdrop-blur-md border-t border-border/50 z-30" style={{ maxWidth: 'inherit', margin: '0 auto' }}>
-        <Button 
-          className="w-full btn-primary h-14 text-lg"
-          onClick={() => {
-            alert("Wait staff has been notified.");
-          }}
-        >
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-background/95 backdrop-blur-md border-t border-border/50 z-30">
+        <Button className="w-full h-12 text-lg font-serif bg-primary text-primary-foreground hover:bg-primary/90">
           Confirm Bill & Call Waiter
         </Button>
       </div>
