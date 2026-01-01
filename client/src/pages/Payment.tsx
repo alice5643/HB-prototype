@@ -8,16 +8,14 @@ import { useStore } from "@/lib/store";
 
 export default function Payment() {
   const [, setLocation] = useLocation();
-  const { cart, partySize } = useStore();
+  const { orders, partySize } = useStore();
   const [showDetails, setShowDetails] = useState(true);
   const [tipOption, setTipOption] = useState<number | 'custom'>(15);
   const [customTip, setCustomTip] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<'waiter' | 'split' | 'online'>('waiter');
 
-  // Calculate bill totals from real cart data
-  // Note: In a real app, we would distinguish food/drink types. 
-  // For now, we sum everything as subtotal.
-  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  // Calculate bill totals from real ORDERS data (not cart)
+  const subtotal = orders.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const serviceCharge = Math.round(subtotal * 0.1);
   
   const getTipAmount = () => {
@@ -68,10 +66,10 @@ export default function Payment() {
               className="card-paper p-6 space-y-4 overflow-hidden bg-white/80"
             >
               <div className="space-y-2 text-sm font-serif">
-                {cart.length === 0 ? (
-                  <div className="text-center text-muted-foreground italic py-4">No items in order</div>
+                {orders.length === 0 ? (
+                  <div className="text-center text-muted-foreground italic py-4">No items ordered yet</div>
                 ) : (
-                  cart.map((item) => (
+                  orders.map((item) => (
                     <div key={`${item.id}-${item.selectedVariationId}`} className="flex justify-between border-b border-dashed border-primary/10 pb-1">
                       <span className="text-foreground">
                         {item.quantity}x {item.name}

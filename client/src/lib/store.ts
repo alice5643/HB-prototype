@@ -19,8 +19,12 @@ interface AppState {
   sharingModel: SharingModel | null;
   tableNumber: string;
   
-  // Cart State
+  // Cart State (Pending items)
   cart: CartItem[];
+  
+  // Orders State (Submitted items)
+  orders: CartItem[];
+  
   orderStatus: 'draft' | 'pending' | 'confirmed' | 'completed';
   
   // Actions
@@ -41,6 +45,7 @@ export const useStore = create<AppState>()(
       sharingModel: null,
       tableNumber: '4', // Default for demo
       cart: [],
+      orders: [],
       orderStatus: 'draft',
       
       setPartySize: (size: PartySize) => set({ partySize: size }),
@@ -95,13 +100,42 @@ export const useStore = create<AppState>()(
         };
       }),
       
-      submitOrder: () => set({ orderStatus: 'pending' }),
+      submitOrder: () => set((state: AppState) => {
+        // Merge cart items into orders
+        // If an item already exists in orders (same ID and variation), we could merge quantities,
+        // but for a restaurant log, it's often better to keep separate entries for separate rounds.
+        // However, to keep the bill simple, let's merge quantities if exact match.
+        
+        const newOrders = [...state.orders];
+        
+        state.cart.forEach(cartItem => {
+          const existingOrderIndex = newOrders.findIndex(orderItem => 
+            orderItem.id === cartItem.id && orderItem.selectedVariationId === cartItem.selectedVariationId
+          );
+          
+          if (existingOrderIndex >= 0) {
+            newOrders[existingOrderIndex] = {
+              ...newOrders[existingOrderIndex],
+              quantity: newOrders[existingOrderIndex].quantity + cartItem.quantity
+            };
+          } else {
+            newOrders.push(cartItem);
+          }
+        });
+        
+        return {
+          orders: newOrders,
+          cart: [], // Clear cart
+          orderStatus: 'pending'
+        };
+      }),
       
       resetSession: () => set({
         hasVisited: false,
         partySize: null,
         sharingModel: null,
         cart: [],
+        orders: [],
         orderStatus: 'draft'
       })
     }),

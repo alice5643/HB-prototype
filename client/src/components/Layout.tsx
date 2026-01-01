@@ -2,7 +2,7 @@ import { ReactNode, useState } from "react";
 import { useLocation } from "wouter";
 import { useStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, X, ChevronRight, Minus, Plus, ClipboardList } from "lucide-react";
+import { ShoppingBag, X, ChevronRight, Minus, Plus, ClipboardList, Bell } from "lucide-react";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,6 +20,9 @@ export default function Layout({ children, showHeader = true, title }: LayoutPro
   const [, setLocation] = useLocation();
   
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const serviceCharge = subtotal * 0.10;
+  const total = subtotal + serviceCharge;
   
   return (
     <div className="min-h-screen flex flex-col relative bg-background">
@@ -104,27 +107,31 @@ export default function Layout({ children, showHeader = true, title }: LayoutPro
                       </div>
                     ) : (
                       cart.map((item) => (
-                        <div key={item.id} className="flex gap-4 items-start py-4 border-b border-border/40 last:border-0">
+                        <div key={`${item.id}-${item.selectedVariationId}`} className="flex gap-4 items-start py-4 border-b border-border/40 last:border-0">
                           <div className="flex-1">
                             <h3 className="font-medium font-serif text-lg">{item.name}</h3>
+                            {item.selectedVariationName && (
+                              <p className="text-xs text-muted-foreground">{item.selectedVariationName}</p>
+                            )}
                             <p className="text-sm text-muted-foreground line-clamp-1">{item.description}</p>
                             {item.allergens && item.allergens.length > 0 && (
                               <p className="text-xs text-amber-600/80 mt-1">
                                 Contains: {item.allergens.join(", ")}
                               </p>
                             )}
+                            <p className="text-sm font-mono mt-1">£{item.price}</p>
                           </div>
                           
                           <div className="flex items-center gap-3 bg-secondary/50 rounded-full px-2 py-1">
                             <button 
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1), item.selectedVariationId)}
                               className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white transition-colors"
                             >
                               <Minus className="w-3 h-3" />
                             </button>
                             <span className="text-sm font-medium w-4 text-center">{item.quantity}</span>
                             <button 
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              onClick={() => updateQuantity(item.id, item.quantity + 1, item.selectedVariationId)}
                               className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white transition-colors"
                             >
                               <Plus className="w-3 h-3" />
@@ -138,22 +145,35 @@ export default function Layout({ children, showHeader = true, title }: LayoutPro
 
                 {/* Sticky Footer - Flex Item */}
                 <div className="flex-shrink-0 p-6 pt-4 border-t border-border bg-background z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] mt-auto">
-                  <div className="space-y-4">
-                    <div className="bg-secondary/30 p-4 rounded-xl">
-                      <p className="text-sm text-muted-foreground text-center italic">
-                        "A member of staff will confirm everything with you."
-                      </p>
+                  {cart.length > 0 && (
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Subtotal</span>
+                        <span>£{subtotal.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Service Charge (10%)</span>
+                        <span>£{serviceCharge.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-lg font-medium pt-2 border-t border-border/50">
+                        <span className="font-serif text-primary">Total</span>
+                        <span className="font-mono">£{total.toFixed(2)}</span>
+                      </div>
                     </div>
-                    
+                  )}
+
+                  <div className="space-y-4">
                     <Button 
-                      className="w-full btn-primary h-14 text-lg"
+                      className="w-full btn-primary h-14 text-lg gap-2"
                       disabled={cart.length === 0}
                       onClick={() => {
+                        submitOrder();
                         setIsTrayOpen(false);
-                        setLocation("/order-summary");
+                        setLocation("/dining-status");
                       }}
                     >
-                      Ask staff to confirm order
+                      <Bell className="w-5 h-5" />
+                      Ring waiter to confirm order
                     </Button>
                   </div>
                 </div>

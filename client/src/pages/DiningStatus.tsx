@@ -1,22 +1,19 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Camera, Utensils, Wine, Clock, Home, BookOpen, ConciergeBell } from "lucide-react";
+import { Camera, Utensils, Wine, Clock, Home, BookOpen, ConciergeBell, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
 
 export default function DiningStatus() {
   const [, setLocation] = useLocation();
-  const { cart } = useStore();
+  const { orders } = useStore();
 
-  // Define standard course order
-  const courseOrder = ["starters", "mains", "desserts"];
-  
-  // Filter items by category
-  const starters = cart.filter(item => item.category === "starters");
-  const mains = cart.filter(item => item.category === "mains");
-  const desserts = cart.filter(item => item.category === "desserts");
-  const drinks = cart.filter(item => item.category === "cocktails" || item.category === "wine" || item.category === "drinks");
+  // Filter items by category - Merge sides into mains
+  const starters = orders.filter(item => item.category === "starters");
+  const mains = orders.filter(item => item.category === "mains" || item.category === "sides");
+  const desserts = orders.filter(item => item.category === "desserts");
+  const drinks = orders.filter(item => item.category === "cocktails" || item.category === "wine" || item.category === "drinks");
 
   // Determine initial step based on what's ordered
   const [currentStep, setCurrentStep] = useState(() => {
@@ -78,6 +75,40 @@ export default function DiningStatus() {
   const currentItems = getCurrentItems();
   const nextItems = getNextStepItems();
 
+  // Logic for "Ready for..." button
+  const getNextStepLabel = () => {
+    const stepIds = activeSteps.map(s => s.id);
+    const currentIndex = stepIds.indexOf(currentStep);
+    
+    if (currentIndex >= stepIds.length - 1) return null; // Already at finish
+    
+    const nextStepId = stepIds[currentIndex + 1];
+    
+    if (nextStepId === 'finish') return "Bill";
+    
+    const nextStep = activeSteps.find(s => s.id === nextStepId);
+    return nextStep ? nextStep.label : "Next Course";
+  };
+
+  const handleReadyForNext = () => {
+    const stepIds = activeSteps.map(s => s.id);
+    const currentIndex = stepIds.indexOf(currentStep);
+    
+    if (currentIndex < stepIds.length - 1) {
+      const nextStepId = stepIds[currentIndex + 1];
+      setCurrentStep(nextStepId);
+      
+      // If advancing to finish, maybe redirect to payment? 
+      // For now, let's just update state, and the UI will show the "Dining Complete" card which has a payment button.
+      // Or if the user clicks "Ready for Bill", we can go straight to payment.
+      if (nextStepId === 'finish') {
+        setLocation("/payment");
+      }
+    }
+  };
+
+  const nextLabel = getNextStepLabel();
+
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
       {/* Top Navigation - Paper Style */}
@@ -126,7 +157,7 @@ export default function DiningStatus() {
       <div className="flex-1 overflow-y-auto p-6 pb-24 space-y-8">
         {/* Ritual Progress */}
         <div className="space-y-4">
-          <h2 className="font-serif text-lg text-gold text-center">Tonight's Ritual Progress</h2>
+          {/* Removed "Tonight's Ritual Progress" text as requested */}
           <div className="flex justify-between items-center px-2 relative py-4 overflow-x-auto">
             {/* Connecting Line */}
             <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-[2px] bg-primary/20 -z-10 min-w-[300px]" />
@@ -234,23 +265,38 @@ export default function DiningStatus() {
               Proceed to Payment
             </Button>
           </div>
-        ) : nextItems && nextItems.length > 0 ? (
-          <div className="card-paper p-4 bg-secondary/30 border-dashed border-primary/30">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 font-serif">Up Next</p>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-xl">🍽️</span>
-                <span className="font-serif text-foreground text-lg">{nextItems[0].name} {nextItems.length > 1 && `+ ${nextItems.length - 1} more`}</span>
-              </div>
-              <span className="text-xs text-muted-foreground font-medium">~15 mins</span>
-            </div>
-          </div>
         ) : (
-          <div className="card-paper p-4 bg-secondary/30 border-dashed border-primary/30">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 font-serif">Up Next</p>
-            <div className="flex items-center justify-between">
-              <span className="font-serif text-foreground text-lg">All dishes served. Would you like anything else?</span>
-            </div>
+          <div className="space-y-4">
+            {nextItems && nextItems.length > 0 ? (
+              <div className="card-paper p-4 bg-secondary/30 border-dashed border-primary/30">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 font-serif">Up Next</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">🍽️</span>
+                    <span className="font-serif text-foreground text-lg">{nextItems[0].name} {nextItems.length > 1 && `+ ${nextItems.length - 1} more`}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground font-medium">~15 mins</span>
+                </div>
+              </div>
+            ) : (
+              <div className="card-paper p-4 bg-secondary/30 border-dashed border-primary/30">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 font-serif">Up Next</p>
+                <div className="flex items-center justify-between">
+                  <span className="font-serif text-foreground text-lg">All dishes served.</span>
+                </div>
+              </div>
+            )}
+
+            {/* Ready for Next Button */}
+            {nextLabel && (
+              <Button 
+                className="w-full btn-primary h-14 text-lg shadow-lg gap-2"
+                onClick={handleReadyForNext}
+              >
+                <span>Ready for {nextLabel}</span>
+                <ArrowRight className="w-5 h-5" />
+              </Button>
+            )}
           </div>
         )}
       </div>
