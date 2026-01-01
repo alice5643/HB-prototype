@@ -11,6 +11,7 @@ import MenuDiscovery from "./pages/MenuDiscovery";
 import OrderSummary from "./pages/OrderSummary";
 import DiningStatus from "./pages/DiningStatus";
 import Service from "./pages/Service";
+import Payment from "./pages/Payment";
 import Menu from "./pages/Menu";
 import Gallery from "./pages/Gallery";
 import DishDetail from "./pages/DishDetail";
@@ -29,6 +30,7 @@ function Router() {
       <Route path={"/order-summary"} component={OrderSummary} />
       <Route path={"/dining-status"} component={DiningStatus} />
       <Route path={"/service"} component={Service} />
+      <Route path={"/payment"} component={Payment} />
       <Route path={"/menu/:type"} component={Menu} />
       <Route path={"/gallery/:type"} component={Gallery} />
       <Route path={"/compare/:id1/:id2"} component={Compare} />

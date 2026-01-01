@@ -8,13 +8,25 @@ export default function DiningStatus() {
   const [, setLocation] = useLocation();
 
   // Mock progress state
+  const [currentStep, setCurrentStep] = useState("mains");
+
   const steps = [
-    { id: "starters", label: "Starters", status: "completed" },
-    { id: "wine", label: "Wine", status: "completed" },
-    { id: "mains", label: "Mains", status: "active" },
-    { id: "dessert", label: "Dessert", status: "pending" },
-    { id: "finish", label: "Finish", status: "pending" },
+    { id: "starters", label: "Starters" },
+    { id: "wine", label: "Wine" },
+    { id: "mains", label: "Mains" },
+    { id: "dessert", label: "Dessert" },
+    { id: "finish", label: "Finish" },
   ];
+
+  const getStepStatus = (stepId: string) => {
+    const stepIds = steps.map(s => s.id);
+    const currentIndex = stepIds.indexOf(currentStep);
+    const stepIndex = stepIds.indexOf(stepId);
+    
+    if (stepIndex < currentIndex) return "completed";
+    if (stepIndex === currentIndex) return "active";
+    return "pending";
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
@@ -69,20 +81,27 @@ export default function DiningStatus() {
             {/* Connecting Line */}
             <div className="absolute left-4 right-4 top-3 h-[2px] bg-border -z-10" />
             
-            {steps.map((step) => (
-              <div key={step.id} className="flex flex-col items-center gap-2 bg-background px-1">
-                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center z-10 
-                  ${step.status === 'completed' ? 'bg-primary border-primary text-primary-foreground' : 
-                    step.status === 'active' ? 'bg-primary border-primary' : 'bg-background border-border'}`}
+            {steps.map((step) => {
+              const status = getStepStatus(step.id);
+              return (
+                <div 
+                  key={step.id} 
+                  className="flex flex-col items-center gap-2 bg-background px-1 cursor-pointer"
+                  onClick={() => setCurrentStep(step.id)}
                 >
-                  {step.status === 'completed' && <span className="text-[10px]">✓</span>}
-                  {step.status === 'active' && <div className="w-2 h-2 bg-background rounded-full" />}
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center z-10 
+                    ${status === 'completed' ? 'bg-primary border-primary text-primary-foreground' : 
+                      status === 'active' ? 'bg-primary border-primary' : 'bg-background border-border'}`}
+                  >
+                    {status === 'completed' && <span className="text-[10px]">✓</span>}
+                    {status === 'active' && <div className="w-2 h-2 bg-background rounded-full" />}
+                  </div>
+                  <span className={`text-[10px] font-medium ${status === 'active' ? 'text-primary' : 'text-muted-foreground'}`}>
+                    {step.label}
+                  </span>
                 </div>
-                <span className={`text-[10px] font-medium ${step.status === 'active' ? 'text-primary' : 'text-muted-foreground'}`}>
-                  {step.label}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -150,17 +169,41 @@ export default function DiningStatus() {
           </div>
         </div>
 
-        {/* Next Course Preview */}
-        <div className="bg-secondary/30 rounded-xl p-4 border border-border/30">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Up Next</p>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-xl">🍮</span>
-              <span className="font-serif text-foreground">Chocolate Lava Cake</span>
+        {/* Next Course Preview / Finish State */}
+        {currentStep === 'dessert' ? (
+          <div className="bg-secondary/30 rounded-xl p-4 border border-border/30">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Up Next</p>
+            <div className="flex items-center justify-between">
+              <span className="font-serif text-foreground">菜上齐了，还需要其他菜吗？</span>
             </div>
-            <span className="text-xs text-muted-foreground">~12 mins</span>
           </div>
-        </div>
+        ) : currentStep === 'finish' ? (
+          <div className="space-y-4">
+            <div className="bg-secondary/30 rounded-xl p-4 border border-border/30">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Dining Complete</p>
+              <div className="flex items-center justify-between">
+                <span className="font-serif text-foreground">Thank you for dining with us.</span>
+              </div>
+            </div>
+            <Button 
+              className="w-full btn-primary h-14 text-lg"
+              onClick={() => setLocation("/payment")}
+            >
+              Proceed to Payment
+            </Button>
+          </div>
+        ) : (
+          <div className="bg-secondary/30 rounded-xl p-4 border border-border/30">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Up Next</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🍮</span>
+                <span className="font-serif text-foreground">Chocolate Lava Cake</span>
+              </div>
+              <span className="text-xs text-muted-foreground">~12 mins</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
