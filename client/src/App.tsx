@@ -15,6 +15,7 @@ import Payment from "./pages/Payment";
 import Menu from "./pages/Menu";
 import Gallery from "./pages/Gallery";
 import DishDetail from "./pages/DishDetail";
+import StaffDashboard from "./pages/StaffDashboard";
 
 import Compare from "./pages/Compare";
 import OrderDraft from "./pages/OrderDraft";
@@ -36,6 +37,7 @@ function Router() {
       <Route path={"/compare/:id1/:id2"} component={Compare} />
       <Route path={"/order-draft"} component={OrderDraft} />
       <Route path={"/dish/:id"} component={DishDetail} />
+      <Route path={"/staff"} component={StaffDashboard} />
 
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

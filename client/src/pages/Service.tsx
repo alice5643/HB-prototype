@@ -5,7 +5,6 @@ import {
   Camera, 
   ChefHat, 
   Wine, 
-  MessageSquare, 
   Snowflake, 
   Sandwich,
   Home,
@@ -13,22 +12,31 @@ import {
   ConciergeBell,
   Utensils as UtensilsIcon
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { useStore, ServiceRequestType } from "@/lib/store";
+import { toast } from "sonner";
 
 export default function Service() {
   const [, setLocation] = useLocation();
+  const addServiceRequest = useStore((state) => state.addServiceRequest);
 
-  const services = [
-    { id: "water", label: "Water Refill", icon: Droplets },
-    { id: "bread", label: "More Bread", icon: Sandwich },
-    { id: "condiments", label: "Condiments", icon: Utensils }, // Using Utensils as generic for condiments
-    { id: "cutlery", label: "New Cutlery", icon: UtensilsIcon },
-    { id: "ice", label: "Ice Bucket", icon: Snowflake },
-    { id: "photo", label: "Photo Assist", icon: Camera },
-    { id: "chef", label: "Consult Chef", icon: ChefHat },
-    { id: "sommelier", label: "Sommelier", icon: Wine },
+  const services: { id: string; label: string; icon: any; type: ServiceRequestType }[] = [
+    { id: "water", label: "Water Refill", icon: Droplets, type: "refill" },
+    { id: "bread", label: "More Bread", icon: Sandwich, type: "side" },
+    { id: "condiments", label: "Condiments", icon: Utensils, type: "condiment" },
+    { id: "cutlery", label: "New Cutlery", icon: UtensilsIcon, type: "cutlery" },
+    { id: "ice", label: "Ice Bucket", icon: Snowflake, type: "custom" },
+    { id: "photo", label: "Photo Assist", icon: Camera, type: "custom" },
+    { id: "chef", label: "Consult Chef", icon: ChefHat, type: "custom" },
+    { id: "sommelier", label: "Sommelier", icon: Wine, type: "custom" },
   ];
+
+  const handleRequest = (service: typeof services[0]) => {
+    addServiceRequest(service.type, service.label);
+    toast.success(`${service.label} request sent`, {
+      description: "A staff member will be with you shortly."
+    });
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
@@ -80,10 +88,7 @@ export default function Service() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
               className="flex flex-col items-center justify-center gap-3 p-6 bg-card border border-border/50 rounded-xl hover:border-primary hover:bg-primary/5 transition-all shadow-sm aspect-square"
-              onClick={() => {
-                // In a real app, this would send a request
-                alert(`Request sent: ${service.label}`);
-              }}
+              onClick={() => handleRequest(service)}
             >
               <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-primary">
                 <service.icon className="w-6 h-6" />

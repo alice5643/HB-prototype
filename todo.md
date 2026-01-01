@@ -1,2 +1,5 @@
-- [ ] Retry pushing code to 'user_github' remote and verify successful synchronization
-- [ ] Switch GitHub authentication to 'alice5643' and retry pushing code
+- [ ] Design data structure and update store for Service Requests
+- [ ] Update Customer Service screen to dispatch real requests
+- [ ] Create Staff Dashboard UI (Layout, Request Cards)
+- [ ] Implement 'Acknowledge' and 'Complete' logic in Staff Dashboard
+- [ ] Verify Customer-Staff interaction loop
