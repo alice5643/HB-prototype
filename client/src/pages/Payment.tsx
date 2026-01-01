@@ -4,27 +4,20 @@ import { ArrowLeft, EyeOff, CreditCard, User, Users, Smartphone } from "lucide-r
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
-// Mock order data matching the simulator context
-const mockOrderItems = [
-  { id: 1, name: "Wagyu Ribeye", price: 85, type: "food", guest: "Guest A" },
-  { id: 2, name: "Truffle Pasta", price: 32, type: "food", guest: "Guest B" },
-  { id: 3, name: "2015 Château Margaux", price: 450, type: "drink", guest: "Guest A" },
-  { id: 4, name: "Caesar Salad", price: 18, type: "food", guest: "Guest B" },
-  { id: 5, name: "Bread Basket", price: 8, type: "food", guest: "Shared" },
-];
+import { useStore } from "@/lib/store";
 
 export default function Payment() {
   const [, setLocation] = useLocation();
+  const { cart, partySize } = useStore();
   const [showDetails, setShowDetails] = useState(true);
   const [tipOption, setTipOption] = useState<number | 'custom'>(15);
   const [customTip, setCustomTip] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<'waiter' | 'split' | 'online'>('waiter');
 
-  // Calculate bill totals
-  const foodTotal = mockOrderItems.filter(i => i.type === 'food').reduce((sum, i) => sum + i.price, 0);
-  const drinkTotal = mockOrderItems.filter(i => i.type === 'drink').reduce((sum, i) => sum + i.price, 0);
-  const subtotal = foodTotal + drinkTotal;
+  // Calculate bill totals from real cart data
+  // Note: In a real app, we would distinguish food/drink types. 
+  // For now, we sum everything as subtotal.
+  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const serviceCharge = Math.round(subtotal * 0.1);
   
   const getTipAmount = () => {
@@ -36,26 +29,9 @@ export default function Payment() {
 
   const total = subtotal + serviceCharge + getTipAmount();
 
-  // Calculate split bill
-  const getGuestTotal = (guest: string) => {
-    const guestItems = mockOrderItems.filter(i => i.guest === guest);
-    const sharedItems = mockOrderItems.filter(i => i.guest === 'Shared');
-    
-    const guestSubtotal = guestItems.reduce((sum, i) => sum + i.price, 0) + 
-                         (sharedItems.reduce((sum, i) => sum + i.price, 0) / 2); // Split shared items evenly
-    
-    const guestService = Math.round(guestSubtotal * 0.1);
-    const guestTip = Math.round(guestSubtotal * (typeof tipOption === 'number' ? tipOption / 100 : 0)); // Simplified tip for split
-    
-    return {
-      items: guestItems,
-      subtotal: guestSubtotal,
-      total: guestSubtotal + guestService + guestTip
-    };
-  };
-
-  const guestA = getGuestTotal('Guest A');
-  const guestB = getGuestTotal('Guest B');
+  // Calculate split bill (Equal Split for now)
+  const numberOfGuests = partySize || 2; // Default to 2 if not set
+  const splitAmount = Math.round(total / numberOfGuests);
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
@@ -92,12 +68,19 @@ export default function Payment() {
               className="card-paper p-6 space-y-4 overflow-hidden bg-white/80"
             >
               <div className="space-y-2 text-sm font-serif">
-                {mockOrderItems.map((item) => (
-                  <div key={item.id} className="flex justify-between border-b border-dashed border-primary/10 pb-1">
-                    <span className="text-foreground">{item.name}</span>
-                    <span className="font-medium">£{item.price}</span>
-                  </div>
-                ))}
+                {cart.length === 0 ? (
+                  <div className="text-center text-muted-foreground italic py-4">No items in order</div>
+                ) : (
+                  cart.map((item) => (
+                    <div key={`${item.id}-${item.selectedVariationId}`} className="flex justify-between border-b border-dashed border-primary/10 pb-1">
+                      <span className="text-foreground">
+                        {item.quantity}x {item.name}
+                        {item.selectedVariationName && <span className="text-xs text-muted-foreground block">{item.selectedVariationName}</span>}
+                      </span>
+                      <span className="font-medium">£{item.price * item.quantity}</span>
+                    </div>
+                  ))
+                )}
               </div>
               
               <div className="h-[2px] bg-primary/20" />
@@ -207,7 +190,7 @@ export default function Payment() {
                 <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'split' ? 'border-primary bg-primary' : 'border-muted-foreground'}`}>
                   {paymentMethod === 'split' && <div className="w-2 h-2 bg-white rounded-full" />}
                 </div>
-                <span>Split Bill</span>
+                <span>Split Bill (Equal Split)</span>
               </div>
             </div>
 
@@ -236,45 +219,20 @@ export default function Payment() {
               className="space-y-6 pt-4 border-t border-primary/20"
             >
               <h3 className="font-medium text-foreground font-serif">Split Bill Details</h3>
+              <p className="text-xs text-muted-foreground italic">Splitting equally among {numberOfGuests} guests.</p>
               
-              {/* Guest A */}
-              <div className="card-paper p-4 bg-white/50 space-y-3">
-                <div className="flex justify-between font-medium text-sm font-serif text-gold">
-                  <span>Guest A</span>
-                  <span>£{guestA.total}</span>
-                </div>
-                <div className="space-y-1 text-xs text-muted-foreground font-serif">
-                  {guestA.items.map(item => (
-                    <div key={item.id} className="flex justify-between">
-                      <span>{item.name}</span>
-                      <span>£{item.price}</span>
+              <div className="grid grid-cols-2 gap-4">
+                {Array.from({ length: numberOfGuests }).map((_, index) => (
+                  <div key={index} className="card-paper p-4 bg-white/50 space-y-3">
+                    <div className="flex justify-between font-medium text-sm font-serif text-gold">
+                      <span>Guest {index + 1}</span>
+                      <span>£{splitAmount}</span>
                     </div>
-                  ))}
-                  <div className="flex justify-between italic text-primary/60">
-                    <span>Shared Items (1/2)</span>
-                    <span>£{mockOrderItems.filter(i => i.guest === 'Shared').reduce((sum, i) => sum + i.price, 0) / 2}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Guest B */}
-              <div className="card-paper p-4 bg-white/50 space-y-3">
-                <div className="flex justify-between font-medium text-sm font-serif text-gold">
-                  <span>Guest B</span>
-                  <span>£{guestB.total}</span>
-                </div>
-                <div className="space-y-1 text-xs text-muted-foreground font-serif">
-                  {guestB.items.map(item => (
-                    <div key={item.id} className="flex justify-between">
-                      <span>{item.name}</span>
-                      <span>£{item.price}</span>
+                    <div className="text-xs text-muted-foreground font-serif text-center">
+                      Equal Share
                     </div>
-                  ))}
-                  <div className="flex justify-between italic text-primary/60">
-                    <span>Shared Items (1/2)</span>
-                    <span>£{mockOrderItems.filter(i => i.guest === 'Shared').reduce((sum, i) => sum + i.price, 0) / 2}</span>
                   </div>
-                </div>
+                ))}
               </div>
             </motion.div>
           )}
