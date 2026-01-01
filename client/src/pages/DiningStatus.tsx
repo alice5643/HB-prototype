@@ -1,13 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
-import { motion } from "framer-motion";
-import { Camera, Utensils, Wine, Clock, Home, BookOpen, ConciergeBell, ArrowRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Camera, Utensils, Clock, Home, BookOpen, ConciergeBell, ArrowRight, Plus, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useStore } from "@/lib/store";
+import { toast } from "sonner";
 
 export default function DiningStatus() {
   const [, setLocation] = useLocation();
-  const { orders } = useStore();
+  const { orders, addToCart } = useStore();
+  
+  // Drawer States
+  const [activeDrawer, setActiveDrawer] = useState<string | null>(null);
+  const [customRequest, setCustomRequest] = useState("");
+  const [condimentRequest, setCondimentRequest] = useState("");
 
   // Filter items by category - Merge sides into mains
   const starters = orders.filter(item => item.category === "starters");
@@ -26,13 +34,12 @@ export default function DiningStatus() {
   // Build dynamic steps
   const steps = [
     ...(starters.length > 0 ? [{ id: "starters", label: "Starters" }] : []),
-    ...(drinks.length > 0 ? [{ id: "drinks", label: "Drinks" }] : []), // Optional drinks step
+    ...(drinks.length > 0 ? [{ id: "drinks", label: "Drinks" }] : []),
     ...(mains.length > 0 ? [{ id: "mains", label: "Mains" }] : []),
     ...(desserts.length > 0 ? [{ id: "dessert", label: "Dessert" }] : []),
     { id: "finish", label: "Finish" },
   ];
 
-  // If no food ordered, just show finish or default
   const activeSteps = steps.length > 1 ? steps : [{ id: "finish", label: "Finish" }];
 
   const getStepStatus = (stepId: string) => {
@@ -45,7 +52,6 @@ export default function DiningStatus() {
     return "pending";
   };
 
-  // Get items for current step
   const getCurrentItems = () => {
     switch (currentStep) {
       case "starters": return starters;
@@ -56,7 +62,6 @@ export default function DiningStatus() {
     }
   };
 
-  // Get items for next step
   const getNextStepItems = () => {
     const stepIds = activeSteps.map(s => s.id);
     const currentIndex = stepIds.indexOf(currentStep);
@@ -75,12 +80,11 @@ export default function DiningStatus() {
   const currentItems = getCurrentItems();
   const nextItems = getNextStepItems();
 
-  // Logic for "Ready for..." button
   const getNextStepLabel = () => {
     const stepIds = activeSteps.map(s => s.id);
     const currentIndex = stepIds.indexOf(currentStep);
     
-    if (currentIndex >= stepIds.length - 1) return null; // Already at finish
+    if (currentIndex >= stepIds.length - 1) return null;
     
     const nextStepId = stepIds[currentIndex + 1];
     
@@ -97,10 +101,6 @@ export default function DiningStatus() {
     if (currentIndex < stepIds.length - 1) {
       const nextStepId = stepIds[currentIndex + 1];
       setCurrentStep(nextStepId);
-      
-      // If advancing to finish, maybe redirect to payment? 
-      // For now, let's just update state, and the UI will show the "Dining Complete" card which has a payment button.
-      // Or if the user clicks "Ready for Bill", we can go straight to payment.
       if (nextStepId === 'finish') {
         setLocation("/payment");
       }
@@ -109,9 +109,49 @@ export default function DiningStatus() {
 
   const nextLabel = getNextStepLabel();
 
+  // Service Actions
+  const handleRefill = (drinkName: string) => {
+    // In a real app, we'd find the item ID. For now, we mock adding it.
+    // We'll add a generic item to cart for now or just notify waiter.
+    // Since user wants it added to bill, we should add to cart.
+    addToCart({
+      id: Math.random().toString(), // Mock ID
+      name: drinkName,
+      price: drinkName === "Still Water" || drinkName === "Sparkling Water" ? 0 : 5, // Mock price
+      description: "Refill request",
+      category: "drinks",
+      image: "",
+      tags: []
+    });
+    toast.success(`${drinkName} added to order`);
+    setActiveDrawer(null);
+  };
+
+  const handleSideOrder = (sideName: string) => {
+    addToCart({
+      id: Math.random().toString(),
+      name: sideName,
+      price: 6,
+      description: "Side order",
+      category: "sides",
+      image: "",
+      tags: []
+    });
+    toast.success(`${sideName} added to order`);
+    setActiveDrawer(null);
+  };
+
+  const handleServiceRequest = (type: string, detail?: string) => {
+    toast.success(`${type} request sent to waiter`);
+    if (detail) console.log(detail);
+    setActiveDrawer(null);
+    setCustomRequest("");
+    setCondimentRequest("");
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
-      {/* Top Navigation - Paper Style */}
+      {/* Top Navigation */}
       <div className="bg-background/95 backdrop-blur-md border-b border-primary/20 px-6 py-4 flex justify-between items-center sticky top-0 z-30 shadow-sm">
         <div className="flex items-center gap-6">
           <button 
@@ -146,7 +186,7 @@ export default function DiningStatus() {
         </button>
       </div>
 
-      {/* Status Bar - Paper Strip */}
+      {/* Status Bar */}
       <div className="bg-white/50 border-b border-primary/10 px-6 py-2 flex justify-center items-center shadow-sm">
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground text-xs uppercase tracking-wider font-serif">Status:</span>
@@ -157,11 +197,8 @@ export default function DiningStatus() {
       <div className="flex-1 overflow-y-auto p-6 pb-24 space-y-8">
         {/* Ritual Progress */}
         <div className="space-y-4">
-          {/* Removed "Tonight's Ritual Progress" text as requested */}
           <div className="flex justify-between items-center px-2 relative py-4 overflow-x-auto">
-            {/* Connecting Line */}
             <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-[2px] bg-primary/20 -z-10 min-w-[300px]" />
-            
             {activeSteps.map((step) => {
               const status = getStepStatus(step.id);
               return (
@@ -187,7 +224,7 @@ export default function DiningStatus() {
           </div>
         </div>
 
-        {/* Current Course Card - Embossed Paper */}
+        {/* Current Course Card */}
         {currentStep !== 'finish' && currentItems.length > 0 ? (
           <motion.div 
             key={currentStep}
@@ -227,30 +264,42 @@ export default function DiningStatus() {
            </div>
         ) : null}
 
-        {/* Service Actions */}
+        {/* Service Actions Grid */}
         <div className="space-y-4">
           <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider font-serif text-center">Quick Service</h3>
           <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" className="h-14 justify-start gap-3 border-primary/30 hover:border-primary hover:bg-primary/5 shadow-sm">
-              <span className="text-xl">🧂</span>
-              <span className="font-serif">Add Seasoning</span>
+            <Button variant="outline" onClick={() => setActiveDrawer("refill")} className="h-14 justify-start gap-3 border-primary/30 hover:border-primary hover:bg-primary/5 shadow-sm">
+              <span className="text-xl">🍷</span>
+              <span className="font-serif">Refill</span>
             </Button>
-            <Button variant="outline" className="h-14 justify-start gap-3 border-primary/30 hover:border-primary hover:bg-primary/5 shadow-sm">
-              <span className="text-xl">🔪</span>
+            <Button variant="outline" onClick={() => setActiveDrawer("sides")} className="h-14 justify-start gap-3 border-primary/30 hover:border-primary hover:bg-primary/5 shadow-sm">
+              <span className="text-xl">🥖</span>
+              <span className="font-serif">More Bread/Sides</span>
+            </Button>
+            <Button variant="outline" onClick={() => setActiveDrawer("condiments")} className="h-14 justify-start gap-3 border-primary/30 hover:border-primary hover:bg-primary/5 shadow-sm">
+              <span className="text-xl">🧂</span>
+              <span className="font-serif">Condiments</span>
+            </Button>
+            <Button variant="outline" onClick={() => setActiveDrawer("cutlery")} className="h-14 justify-start gap-3 border-primary/30 hover:border-primary hover:bg-primary/5 shadow-sm">
+              <span className="text-xl">🍴</span>
               <span className="font-serif">New Cutlery</span>
             </Button>
-            <Button variant="outline" className="h-14 justify-start gap-3 border-primary/30 hover:border-primary hover:bg-primary/5 shadow-sm">
+            <Button variant="outline" onClick={() => handleServiceRequest("Ice Bucket")} className="h-14 justify-start gap-3 border-primary/30 hover:border-primary hover:bg-primary/5 shadow-sm">
               <span className="text-xl">🧊</span>
               <span className="font-serif">Ice Bucket</span>
             </Button>
-            <Button variant="outline" className="h-14 justify-start gap-3 border-primary/30 hover:border-primary hover:bg-primary/5 shadow-sm">
+            <Button variant="outline" onClick={() => handleServiceRequest("Photo Assist")} className="h-14 justify-start gap-3 border-primary/30 hover:border-primary hover:bg-primary/5 shadow-sm">
               <Camera className="w-5 h-5 text-primary" />
               <span className="font-serif">Photo Moment</span>
+            </Button>
+            <Button variant="outline" onClick={() => setActiveDrawer("custom")} className="col-span-2 h-14 justify-center gap-3 border-primary/30 hover:border-primary hover:bg-primary/5 shadow-sm">
+              <ConciergeBell className="w-5 h-5 text-primary" />
+              <span className="font-serif">Custom Request</span>
             </Button>
           </div>
         </div>
 
-        {/* Next Course Preview / Finish State */}
+        {/* Next Course / Finish */}
         {currentStep === 'finish' ? (
           <div className="space-y-4">
             <div className="card-paper p-6 bg-primary/5 border-primary/30 text-center">
@@ -287,7 +336,6 @@ export default function DiningStatus() {
               </div>
             )}
 
-            {/* Ready for Next Button */}
             {nextLabel && (
               <Button 
                 className="w-full btn-primary h-14 text-lg shadow-lg gap-2"
@@ -299,7 +347,120 @@ export default function DiningStatus() {
             )}
           </div>
         )}
+
+        {/* Add More Button */}
+        <Button 
+          variant="outline" 
+          className="w-full h-14 border-dashed border-primary/40 text-primary hover:bg-primary/5 gap-2"
+          onClick={() => setLocation("/menus")}
+        >
+          <Plus className="w-5 h-5" />
+          <span className="font-serif">Add More Items</span>
+        </Button>
       </div>
+
+      {/* Drawers */}
+      <AnimatePresence>
+        {activeDrawer && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
+              onClick={() => setActiveDrawer(null)}
+            />
+            <motion.div 
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              className="fixed bottom-0 left-0 right-0 bg-background rounded-t-3xl z-50 p-6 pb-10 shadow-2xl border-t border-primary/20 max-h-[80vh] overflow-y-auto"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="font-serif text-2xl text-primary">
+                  {activeDrawer === "refill" && "Refill Drink"}
+                  {activeDrawer === "sides" && "Add Sides"}
+                  {activeDrawer === "condiments" && "Request Condiments"}
+                  {activeDrawer === "cutlery" && "New Cutlery"}
+                  {activeDrawer === "custom" && "Custom Request"}
+                </h3>
+                <button onClick={() => setActiveDrawer(null)} className="p-2 hover:bg-secondary rounded-full">
+                  <X className="w-6 h-6 text-muted-foreground" />
+                </button>
+              </div>
+
+              {activeDrawer === "refill" && (
+                <div className="space-y-3">
+                  {drinks.map((drink, i) => (
+                    <button key={i} onClick={() => handleRefill(drink.name)} className="w-full p-4 text-left card-paper hover:bg-secondary/50 transition-colors flex justify-between items-center">
+                      <span className="font-serif text-lg">{drink.name}</span>
+                      <Plus className="w-5 h-5 text-primary" />
+                    </button>
+                  ))}
+                  <button onClick={() => handleRefill("Still Water")} className="w-full p-4 text-left card-paper hover:bg-secondary/50 transition-colors flex justify-between items-center">
+                    <span className="font-serif text-lg">Still Water</span>
+                    <Plus className="w-5 h-5 text-primary" />
+                  </button>
+                  <button onClick={() => handleRefill("Sparkling Water")} className="w-full p-4 text-left card-paper hover:bg-secondary/50 transition-colors flex justify-between items-center">
+                    <span className="font-serif text-lg">Sparkling Water</span>
+                    <Plus className="w-5 h-5 text-primary" />
+                  </button>
+                </div>
+              )}
+
+              {activeDrawer === "sides" && (
+                <div className="space-y-3">
+                  {["Sourdough Bread", "Steamed Rice", "Truffle Fries", "Grilled Asparagus"].map((side) => (
+                    <button key={side} onClick={() => handleSideOrder(side)} className="w-full p-4 text-left card-paper hover:bg-secondary/50 transition-colors flex justify-between items-center">
+                      <span className="font-serif text-lg">{side}</span>
+                      <span className="text-sm font-mono text-muted-foreground">£6.00</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {activeDrawer === "condiments" && (
+                <div className="space-y-4">
+                  <Input 
+                    placeholder="e.g. Ketchup, Mayo, Hot Sauce..." 
+                    value={condimentRequest}
+                    onChange={(e) => setCondimentRequest(e.target.value)}
+                    className="font-serif text-lg p-6 h-16"
+                  />
+                  <Button className="w-full btn-primary h-14" onClick={() => handleServiceRequest("Condiments", condimentRequest)}>
+                    Request Condiments
+                  </Button>
+                </div>
+              )}
+
+              {activeDrawer === "cutlery" && (
+                <div className="grid grid-cols-3 gap-4">
+                  {["Fork", "Knife", "Spoon"].map((item) => (
+                    <button key={item} onClick={() => handleServiceRequest("Cutlery", item)} className="p-6 card-paper hover:bg-secondary/50 transition-colors flex flex-col items-center gap-2">
+                      <span className="text-2xl">🍴</span>
+                      <span className="font-serif">{item}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {activeDrawer === "custom" && (
+                <div className="space-y-4">
+                  <Textarea 
+                    placeholder="How can we help you?" 
+                    value={customRequest}
+                    onChange={(e) => setCustomRequest(e.target.value)}
+                    className="font-serif text-lg p-4 min-h-[150px]"
+                  />
+                  <Button className="w-full btn-primary h-14" onClick={() => handleServiceRequest("Custom Request", customRequest)}>
+                    Send Request
+                  </Button>
+                </div>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,0 +1,6 @@
+- [ ] Implement 'Refill' drawer with existing drinks and water option
+- [ ] Implement 'Sides' drawer for bread, rice, chips (adds to bill)
+- [ ] Implement 'Condiments' drawer with custom text input
+- [ ] Implement 'Cutlery' drawer with Fork, Knife, Spoon options
+- [ ] Implement 'Custom Request' drawer with text area
+- [ ] Add 'Add More' button to redirect to menus
