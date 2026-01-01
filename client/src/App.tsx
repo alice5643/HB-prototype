@@ -8,6 +8,8 @@ import Welcome from "./pages/Welcome";
 import MenuList from "./pages/MenuList";
 import Dashboard from "./pages/Dashboard";
 import MenuDiscovery from "./pages/MenuDiscovery";
+import OrderSummary from "./pages/OrderSummary";
+import DiningStatus from "./pages/DiningStatus";
 import Menu from "./pages/Menu";
 import Gallery from "./pages/Gallery";
 import DishDetail from "./pages/DishDetail";
@@ -21,8 +23,10 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Welcome} />
       <Route path={"/dashboard"} component={Dashboard} />
-      <Route path={"/menus"} component={MenuDiscovery} />
-      <Route path={"/old-menus"} component={MenuList} />
+      <Route path={"/menus"} component={MenuList} />
+      <Route path={"/discovery"} component={MenuDiscovery} />
+      <Route path={"/order-summary"} component={OrderSummary} />
+      <Route path={"/dining-status"} component={DiningStatus} />
       <Route path={"/menu/:type"} component={Menu} />
       <Route path={"/gallery/:type"} component={Gallery} />
       <Route path={"/compare/:id1/:id2"} component={Compare} />

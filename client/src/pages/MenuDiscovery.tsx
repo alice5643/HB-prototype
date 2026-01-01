@@ -135,14 +135,7 @@ export default function MenuDiscovery() {
         <div className="fixed bottom-6 left-0 right-0 px-6 z-30 pointer-events-none" style={{ maxWidth: 'inherit', margin: '0 auto' }}>
           <Button 
             className="w-full h-14 rounded-full shadow-lg btn-primary pointer-events-auto flex items-center justify-between px-6"
-            onClick={() => {
-              // Open tray logic would go here, or navigate to cart
-              // For now, we can just trigger the layout tray if we were inside Layout, 
-              // but since this is a standalone page, we might need to handle it differently.
-              // Let's just navigate to a cart view or show a toast for now.
-              // Or better, use the Layout component for this page too?
-              // The design shows a specific bottom bar.
-            }}
+            onClick={() => setLocation("/order-summary")}
           >
             <div className="flex items-center gap-2">
               <ShoppingBag className="w-5 h-5" />

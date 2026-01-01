@@ -1,20 +1,39 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Bell, Home, BookOpen, ConciergeBell, User, ChevronRight } from "lucide-react";
+import { Bell, Home, BookOpen, ConciergeBell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
-      {/* Status Bar */}
-      <div className="bg-card border-b border-border/50 px-6 py-4 flex justify-between items-center sticky top-0 z-20">
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground text-sm">Status:</span>
-          <span className="font-medium text-primary">Ready to Order</span>
+      {/* Top Navigation */}
+      <div className="bg-background/95 backdrop-blur-md border-b border-border/50 px-6 py-4 flex justify-between items-center sticky top-0 z-30">
+        <div className="flex items-center gap-6">
+          <button 
+            className={`flex items-center gap-2 text-sm font-medium transition-colors ${location === '/dashboard' ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
+            onClick={() => setLocation("/dashboard")}
+          >
+            <Home className="w-4 h-4" />
+            Home
+          </button>
+          <button 
+            className={`flex items-center gap-2 text-sm font-medium transition-colors ${location === '/menus' ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
+            onClick={() => setLocation("/menus")}
+          >
+            <BookOpen className="w-4 h-4" />
+            Menu
+          </button>
+          <button 
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+          >
+            <ConciergeBell className="w-4 h-4" />
+            Service
+          </button>
         </div>
+        
         <button className="relative p-2 hover:bg-secondary rounded-full transition-colors">
           <Bell className="w-5 h-5 text-foreground" />
           <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
@@ -30,7 +49,6 @@ export default function Dashboard() {
             alt="Restaurant Ambience" 
             className="w-full h-full object-cover opacity-80"
             onError={(e) => {
-              // Fallback if image doesn't exist
               (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1000&auto=format&fit=crop";
             }}
           />
@@ -38,6 +56,17 @@ export default function Dashboard() {
         </div>
 
         <div className="px-6 -mt-12 relative z-10 space-y-6">
+          {/* Status Card */}
+          <div className="bg-card border border-border/50 rounded-xl p-4 shadow-sm flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-sm">Status:</span>
+              <span className="font-medium text-primary">Ready to Order</span>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => setLocation("/dining-status")}>
+              View Status
+            </Button>
+          </div>
+
           {/* The Ritual Card */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -96,31 +125,6 @@ export default function Dashboard() {
               Wine List
             </Button>
           </motion.div>
-        </div>
-      </div>
-
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border/50 px-6 py-4 z-30" style={{ maxWidth: 'inherit', margin: '0 auto' }}>
-        <div className="flex justify-between items-center">
-          <button className="flex flex-col items-center gap-1 text-primary">
-            <Home className="w-6 h-6" />
-            <span className="text-[10px] font-medium">Home</span>
-          </button>
-          <button 
-            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
-            onClick={() => setLocation("/menus")}
-          >
-            <BookOpen className="w-6 h-6" />
-            <span className="text-[10px] font-medium">Menu</span>
-          </button>
-          <button className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors">
-            <ConciergeBell className="w-6 h-6" />
-            <span className="text-[10px] font-medium">Service</span>
-          </button>
-          <button className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors">
-            <User className="w-6 h-6" />
-            <span className="text-[10px] font-medium">Profile</span>
-          </button>
         </div>
       </div>
     </div>
