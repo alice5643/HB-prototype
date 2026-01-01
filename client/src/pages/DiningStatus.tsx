@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Bell, Camera, Utensils, Wine, Clock } from "lucide-react";
+import { Bell, Camera, Utensils, Wine, Clock, Home, BookOpen, ConciergeBell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function DiningStatus() {
@@ -18,16 +18,43 @@ export default function DiningStatus() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
-      {/* Status Bar */}
-      <div className="bg-card border-b border-border/50 px-6 py-4 flex justify-between items-center sticky top-0 z-20">
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground text-sm">Status:</span>
-          <span className="font-medium text-primary">Dining</span>
+      {/* Top Navigation */}
+      <div className="bg-background/95 backdrop-blur-md border-b border-border/50 px-6 py-4 flex justify-between items-center sticky top-0 z-30">
+        <div className="flex items-center gap-6">
+          <button 
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            onClick={() => setLocation("/dashboard")}
+          >
+            <Home className="w-4 h-4" />
+            Home
+          </button>
+          <button 
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            onClick={() => setLocation("/menus")}
+          >
+            <BookOpen className="w-4 h-4" />
+            Menu
+          </button>
+          <button 
+            className="flex items-center gap-2 text-sm font-medium text-primary transition-colors"
+          >
+            <ConciergeBell className="w-4 h-4" />
+            Service
+          </button>
         </div>
+        
         <button className="relative p-2 hover:bg-secondary rounded-full transition-colors">
           <Bell className="w-5 h-5 text-foreground" />
           <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
         </button>
+      </div>
+
+      {/* Status Bar */}
+      <div className="bg-card/50 border-b border-border/50 px-6 py-2 flex justify-center items-center">
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground text-xs uppercase tracking-wider">Status:</span>
+          <span className="font-medium text-primary text-sm">Dining in Progress</span>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 pb-24 space-y-8">
