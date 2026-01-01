@@ -30,7 +30,7 @@ export default function Layout({ children, showHeader = true, title }: LayoutPro
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <h1 className="font-serif text-xl text-primary cursor-pointer" onClick={() => setLocation("/menu")}>
-                  {title || "Azay"}
+                  {title || "Savoy"}
                 </h1>
                 <ThemeSwitcher />
               </div>

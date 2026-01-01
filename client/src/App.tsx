@@ -6,6 +6,8 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Welcome from "./pages/Welcome";
 import MenuList from "./pages/MenuList";
+import Dashboard from "./pages/Dashboard";
+import MenuDiscovery from "./pages/MenuDiscovery";
 import Menu from "./pages/Menu";
 import Gallery from "./pages/Gallery";
 import DishDetail from "./pages/DishDetail";
@@ -18,7 +20,9 @@ function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Welcome} />
-      <Route path={"/menus"} component={MenuList} />
+      <Route path={"/dashboard"} component={Dashboard} />
+      <Route path={"/menus"} component={MenuDiscovery} />
+      <Route path={"/old-menus"} component={MenuList} />
       <Route path={"/menu/:type"} component={Menu} />
       <Route path={"/gallery/:type"} component={Gallery} />
       <Route path={"/compare/:id1/:id2"} component={Compare} />
