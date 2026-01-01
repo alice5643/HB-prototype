@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Bell, Home, BookOpen, ConciergeBell } from "lucide-react";
+import { Bell, Home, BookOpen, ConciergeBell, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
@@ -34,9 +34,12 @@ export default function Dashboard() {
           </button>
         </div>
         
-        <button className="relative p-2 hover:bg-secondary rounded-full transition-colors">
-          <Bell className="w-5 h-5 text-foreground" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+        <button 
+          className="relative p-2 hover:bg-secondary rounded-full transition-colors"
+          onClick={() => setLocation("/dining-status")}
+        >
+          <Utensils className="w-5 h-5 text-foreground" />
+          <span className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full"></span>
         </button>
       </div>
 
