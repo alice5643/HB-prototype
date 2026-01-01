@@ -10,18 +10,21 @@ import { toast } from "sonner";
 
 export default function DiningStatus() {
   const [, setLocation] = useLocation();
-  const { orders, addToCart } = useStore();
+  const { orders, cart, addToCart } = useStore();
   
   // Drawer States
   const [activeDrawer, setActiveDrawer] = useState<string | null>(null);
   const [customRequest, setCustomRequest] = useState("");
   const [condimentRequest, setCondimentRequest] = useState("");
 
-  // Filter items by category - Merge sides into mains
-  const starters = orders.filter(item => item.category === "starters");
-  const mains = orders.filter(item => item.category === "mains" || item.category === "sides");
-  const desserts = orders.filter(item => item.category === "desserts");
-  const drinks = orders.filter(item => item.category === "cocktails" || item.category === "wine" || item.category === "drinks");
+  // Combine orders and cart for timeline generation
+  const allItems = [...orders, ...cart];
+
+  // Filter items by category - Merge sides into mains, case-insensitive
+  const starters = allItems.filter(item => item.category.toLowerCase() === "starters");
+  const mains = allItems.filter(item => ["mains", "sides"].includes(item.category.toLowerCase()));
+  const desserts = allItems.filter(item => item.category.toLowerCase() === "desserts");
+  const drinks = allItems.filter(item => ["cocktails", "wine", "drinks"].includes(item.category.toLowerCase()));
 
   // Determine initial step based on what's ordered
   const [currentStep, setCurrentStep] = useState(() => {
@@ -111,9 +114,6 @@ export default function DiningStatus() {
 
   // Service Actions
   const handleRefill = (drinkName: string) => {
-    // In a real app, we'd find the item ID. For now, we mock adding it.
-    // We'll add a generic item to cart for now or just notify waiter.
-    // Since user wants it added to bill, we should add to cart.
     addToCart({
       id: Math.random().toString(), // Mock ID
       name: drinkName,
