@@ -174,7 +174,7 @@ export default function DiningStatus() {
           <div className="bg-secondary/30 rounded-xl p-4 border border-border/30">
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Up Next</p>
             <div className="flex items-center justify-between">
-              <span className="font-serif text-foreground">菜上齐了，还需要其他菜吗？</span>
+              <span className="font-serif text-foreground">All dishes served. Would you like anything else?</span>
             </div>
           </div>
         ) : currentStep === 'finish' ? (
