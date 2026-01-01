@@ -59,17 +59,17 @@ export default function Payment() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
-      {/* Header */}
-      <div className="bg-background/95 backdrop-blur-md border-b border-border/50 px-6 py-4 flex justify-between items-center sticky top-0 z-30">
+      {/* Header - Paper Style */}
+      <div className="bg-background/95 backdrop-blur-md border-b border-primary/20 px-6 py-4 flex justify-between items-center sticky top-0 z-30 shadow-sm">
         <button 
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors font-serif"
           onClick={() => setLocation("/dining-status")}
         >
           <ArrowLeft className="w-4 h-4" />
           Back
         </button>
         <button 
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors font-serif"
           onClick={() => setShowDetails(!showDetails)}
         >
           <EyeOff className="w-4 h-4" />
@@ -79,31 +79,31 @@ export default function Payment() {
 
       <div className="flex-1 overflow-y-auto p-6 pb-32 space-y-8">
         <div className="text-center mb-2">
-          <h1 className="font-serif text-2xl text-primary">🧾 Tonight's Bill</h1>
+          <h1 className="font-serif text-2xl text-gold">🧾 Tonight's Bill</h1>
         </div>
 
-        {/* Bill Details */}
+        {/* Bill Details - Paper Receipt Style */}
         <AnimatePresence>
           {showDetails && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="space-y-4 overflow-hidden"
+              className="card-paper p-6 space-y-4 overflow-hidden bg-white/80"
             >
-              <div className="space-y-2 text-sm">
+              <div className="space-y-2 text-sm font-serif">
                 {mockOrderItems.map((item) => (
-                  <div key={item.id} className="flex justify-between">
-                    <span className="text-muted-foreground">{item.name}</span>
-                    <span>£{item.price}</span>
+                  <div key={item.id} className="flex justify-between border-b border-dashed border-primary/10 pb-1">
+                    <span className="text-foreground">{item.name}</span>
+                    <span className="font-medium">£{item.price}</span>
                   </div>
                 ))}
               </div>
               
-              <div className="h-[1px] bg-border/50" />
+              <div className="h-[2px] bg-primary/20" />
               
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between font-medium">
+              <div className="space-y-2 text-sm font-serif">
+                <div className="flex justify-between font-medium text-foreground">
                   <span>Subtotal</span>
                   <span>£{subtotal}</span>
                 </div>
@@ -112,46 +112,45 @@ export default function Payment() {
                   <span>£{serviceCharge}</span>
                 </div>
               </div>
-              <div className="h-[1px] bg-border/50" />
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Total */}
-        <div className="flex justify-between items-end">
-          <span className="font-serif text-xl text-primary">Total</span>
+        {/* Total - Embossed Gold */}
+        <div className="flex justify-between items-end px-2">
+          <span className="font-serif text-xl text-gold">Total</span>
           <div className="text-right">
-            <span className="font-serif text-3xl text-primary">£{total}</span>
+            <span className="font-serif text-4xl text-gold drop-shadow-sm">£{total}</span>
             {tipOption !== 0 && (
-              <p className="text-xs text-muted-foreground mt-1">Includes Tip £{getTipAmount()}</p>
+              <p className="text-xs text-muted-foreground mt-1 font-serif italic">Includes Tip £{getTipAmount()}</p>
             )}
           </div>
         </div>
 
-        {/* Tip Selection */}
+        {/* Tip Selection - Embossed Buttons */}
         <div className="space-y-4">
-          <h3 className="text-sm font-medium text-muted-foreground">💝 Tip (Optional)</h3>
+          <h3 className="text-sm font-medium text-muted-foreground font-serif uppercase tracking-wider">💝 Tip (Optional)</h3>
           <div className="space-y-3">
             <div 
-              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${tipOption === 0 ? 'border-primary bg-primary/5' : 'border-border'}`}
+              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all shadow-sm ${tipOption === 0 ? 'border-primary bg-primary/5' : 'border-primary/20 bg-white hover:bg-primary/5'}`}
               onClick={() => setTipOption(0)}
             >
               <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${tipOption === 0 ? 'border-primary bg-primary' : 'border-muted-foreground'}`}>
                 {tipOption === 0 && <div className="w-2 h-2 bg-white rounded-full" />}
               </div>
-              <span>No Tip</span>
+              <span className="font-serif">No Tip</span>
             </div>
 
             {[15, 18, 20].map((pct) => (
               <div 
                 key={pct}
-                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${tipOption === pct ? 'border-primary bg-primary/5' : 'border-border'}`}
+                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all shadow-sm ${tipOption === pct ? 'border-primary bg-primary/5' : 'border-primary/20 bg-white hover:bg-primary/5'}`}
                 onClick={() => setTipOption(pct)}
               >
                 <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${tipOption === pct ? 'border-primary bg-primary' : 'border-muted-foreground'}`}>
                   {tipOption === pct && <div className="w-2 h-2 bg-white rounded-full" />}
                 </div>
-                <div className="flex justify-between flex-1">
+                <div className="flex justify-between flex-1 font-serif">
                   <span>{pct}%</span>
                   <span className="text-muted-foreground">£{Math.round(subtotal * (pct / 100))}</span>
                 </div>
@@ -159,19 +158,19 @@ export default function Payment() {
             ))}
 
             <div 
-              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${tipOption === 'custom' ? 'border-primary bg-primary/5' : 'border-border'}`}
+              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all shadow-sm ${tipOption === 'custom' ? 'border-primary bg-primary/5' : 'border-primary/20 bg-white hover:bg-primary/5'}`}
               onClick={() => setTipOption('custom')}
             >
               <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${tipOption === 'custom' ? 'border-primary bg-primary' : 'border-muted-foreground'}`}>
                 {tipOption === 'custom' && <div className="w-2 h-2 bg-white rounded-full" />}
               </div>
-              <div className="flex items-center gap-2 flex-1">
+              <div className="flex items-center gap-2 flex-1 font-serif">
                 <span>Custom</span>
                 {tipOption === 'custom' && (
                   <Input 
                     type="number" 
                     placeholder="Enter Amount" 
-                    className="h-8 w-32 ml-auto bg-background"
+                    className="h-8 w-32 ml-auto bg-background border-primary/30"
                     value={customTip}
                     onChange={(e) => setCustomTip(e.target.value)}
                     onClick={(e) => e.stopPropagation()}
@@ -182,16 +181,16 @@ export default function Payment() {
           </div>
         </div>
 
-        {/* Payment Method */}
+        {/* Payment Method - Embossed Cards */}
         <div className="space-y-4">
-          <h3 className="text-sm font-medium text-muted-foreground">💳 Payment Method</h3>
+          <h3 className="text-sm font-medium text-muted-foreground font-serif uppercase tracking-wider">💳 Payment Method</h3>
           <div className="space-y-3">
             <div 
-              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${paymentMethod === 'waiter' ? 'border-primary bg-primary/5' : 'border-border'}`}
+              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all shadow-sm ${paymentMethod === 'waiter' ? 'border-primary bg-primary/5' : 'border-primary/20 bg-white hover:bg-primary/5'}`}
               onClick={() => setPaymentMethod('waiter')}
             >
               <User className="w-5 h-5 text-muted-foreground" />
-              <div className="flex items-center gap-3 flex-1">
+              <div className="flex items-center gap-3 flex-1 font-serif">
                 <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'waiter' ? 'border-primary bg-primary' : 'border-muted-foreground'}`}>
                   {paymentMethod === 'waiter' && <div className="w-2 h-2 bg-white rounded-full" />}
                 </div>
@@ -200,11 +199,11 @@ export default function Payment() {
             </div>
 
             <div 
-              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${paymentMethod === 'split' ? 'border-primary bg-primary/5' : 'border-border'}`}
+              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all shadow-sm ${paymentMethod === 'split' ? 'border-primary bg-primary/5' : 'border-primary/20 bg-white hover:bg-primary/5'}`}
               onClick={() => setPaymentMethod('split')}
             >
               <Users className="w-5 h-5 text-muted-foreground" />
-              <div className="flex items-center gap-3 flex-1">
+              <div className="flex items-center gap-3 flex-1 font-serif">
                 <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'split' ? 'border-primary bg-primary' : 'border-muted-foreground'}`}>
                   {paymentMethod === 'split' && <div className="w-2 h-2 bg-white rounded-full" />}
                 </div>
@@ -213,11 +212,11 @@ export default function Payment() {
             </div>
 
             <div 
-              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${paymentMethod === 'online' ? 'border-primary bg-primary/5' : 'border-border'}`}
+              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all shadow-sm ${paymentMethod === 'online' ? 'border-primary bg-primary/5' : 'border-primary/20 bg-white hover:bg-primary/5'}`}
               onClick={() => setPaymentMethod('online')}
             >
               <Smartphone className="w-5 h-5 text-muted-foreground" />
-              <div className="flex items-center gap-3 flex-1">
+              <div className="flex items-center gap-3 flex-1 font-serif">
                 <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'online' ? 'border-primary bg-primary' : 'border-muted-foreground'}`}>
                   {paymentMethod === 'online' && <div className="w-2 h-2 bg-white rounded-full" />}
                 </div>
@@ -227,31 +226,31 @@ export default function Payment() {
           </div>
         </div>
 
-        {/* Split Bill Details */}
+        {/* Split Bill Details - Paper Card */}
         <AnimatePresence>
           {paymentMethod === 'split' && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="space-y-6 pt-4 border-t border-border/50"
+              className="space-y-6 pt-4 border-t border-primary/20"
             >
-              <h3 className="font-medium text-foreground">Split Bill Details</h3>
+              <h3 className="font-medium text-foreground font-serif">Split Bill Details</h3>
               
               {/* Guest A */}
-              <div className="space-y-3 p-4 bg-secondary/20 rounded-lg">
-                <div className="flex justify-between font-medium text-sm">
+              <div className="card-paper p-4 bg-white/50 space-y-3">
+                <div className="flex justify-between font-medium text-sm font-serif text-gold">
                   <span>Guest A</span>
                   <span>£{guestA.total}</span>
                 </div>
-                <div className="space-y-1 text-xs text-muted-foreground">
+                <div className="space-y-1 text-xs text-muted-foreground font-serif">
                   {guestA.items.map(item => (
                     <div key={item.id} className="flex justify-between">
                       <span>{item.name}</span>
                       <span>£{item.price}</span>
                     </div>
                   ))}
-                  <div className="flex justify-between italic">
+                  <div className="flex justify-between italic text-primary/60">
                     <span>Shared Items (1/2)</span>
                     <span>£{mockOrderItems.filter(i => i.guest === 'Shared').reduce((sum, i) => sum + i.price, 0) / 2}</span>
                   </div>
@@ -259,19 +258,19 @@ export default function Payment() {
               </div>
 
               {/* Guest B */}
-              <div className="space-y-3 p-4 bg-secondary/20 rounded-lg">
-                <div className="flex justify-between font-medium text-sm">
+              <div className="card-paper p-4 bg-white/50 space-y-3">
+                <div className="flex justify-between font-medium text-sm font-serif text-gold">
                   <span>Guest B</span>
                   <span>£{guestB.total}</span>
                 </div>
-                <div className="space-y-1 text-xs text-muted-foreground">
+                <div className="space-y-1 text-xs text-muted-foreground font-serif">
                   {guestB.items.map(item => (
                     <div key={item.id} className="flex justify-between">
                       <span>{item.name}</span>
                       <span>£{item.price}</span>
                     </div>
                   ))}
-                  <div className="flex justify-between italic">
+                  <div className="flex justify-between italic text-primary/60">
                     <span>Shared Items (1/2)</span>
                     <span>£{mockOrderItems.filter(i => i.guest === 'Shared').reduce((sum, i) => sum + i.price, 0) / 2}</span>
                   </div>
@@ -282,9 +281,9 @@ export default function Payment() {
         </AnimatePresence>
       </div>
 
-      {/* Bottom Action */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-background/95 backdrop-blur-md border-t border-border/50 z-30">
-        <Button className="w-full h-12 text-lg font-serif bg-primary text-primary-foreground hover:bg-primary/90">
+      {/* Bottom Action - Floating Paper Button */}
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-background/95 backdrop-blur-md border-t border-primary/20 z-30">
+        <Button className="w-full btn-primary h-14 text-lg font-serif shadow-lg">
           Confirm Bill & Call Waiter
         </Button>
       </div>

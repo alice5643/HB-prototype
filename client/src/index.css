@@ -68,93 +68,82 @@
 }
 
 /* 
-  THEME 1: Earthen Elegance (Default)
-  Wabi-Sabi / Organic Minimalism
-  Warm neutrals, clay, unbleached linen
+  THEME: Paper & Gold Foil (Replaces Earthen Elegance)
+  Aesthetic: Textured paper, embossed elements, gold foil borders, tactile feel
 */
 :root[data-theme="earthen"], :root:not([data-theme]) {
   --font-serif-family: "Cormorant Garamond", serif;
   --font-sans-family: "Manrope", sans-serif;
   
-  --primary: oklch(0.45 0.05 140); /* Deep Sage */
-  --primary-foreground: oklch(0.98 0.01 90);
+  /* Gold Foil Colors */
+  --gold-primary: oklch(0.75 0.15 85); /* Rich Gold */
+  --gold-light: oklch(0.85 0.12 85); /* Light Gold */
+  --gold-dark: oklch(0.65 0.18 85); /* Dark Gold/Bronze */
   
-  --background: oklch(0.97 0.01 90); /* Cream/Off-white */
-  --foreground: oklch(0.25 0.02 80); /* Dark Charcoal */
+  --primary: var(--gold-primary);
+  --primary-foreground: oklch(0.2 0.05 85); /* Dark Brown text on Gold */
   
-  --card: oklch(0.98 0.005 90);
-  --card-foreground: oklch(0.25 0.02 80);
+  --background: oklch(0.96 0.02 95); /* Warm Paper White */
+  --foreground: oklch(0.3 0.05 50); /* Dark Ink Brown */
   
-  --popover: oklch(0.98 0.005 90);
-  --popover-foreground: oklch(0.25 0.02 80);
+  --card: oklch(0.97 0.01 95); /* Slightly lighter paper for cards */
+  --card-foreground: oklch(0.3 0.05 50);
   
-  --secondary: oklch(0.92 0.02 95);
-  --secondary-foreground: oklch(0.3 0.02 80);
+  --popover: oklch(0.97 0.01 95);
+  --popover-foreground: oklch(0.3 0.05 50);
   
-  --muted: oklch(0.94 0.01 90);
-  --muted-foreground: oklch(0.55 0.02 80);
+  --secondary: oklch(0.94 0.03 95); /* Pressed paper look */
+  --secondary-foreground: oklch(0.35 0.05 50);
   
-  --accent: oklch(0.94 0.02 95);
-  --accent-foreground: oklch(0.3 0.03 80);
+  --muted: oklch(0.92 0.02 95);
+  --muted-foreground: oklch(0.6 0.05 50);
   
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
+  --accent: oklch(0.95 0.05 85); /* Pale Gold tint */
+  --accent-foreground: oklch(0.35 0.05 50);
   
-  --border: oklch(0.88 0.01 90);
-  --input: oklch(0.88 0.01 90);
-  --ring: oklch(0.45 0.05 140);
+  --destructive: oklch(0.6 0.2 25);
+  --destructive-foreground: oklch(0.98 0 0);
   
-  --radius: 0.75rem;
+  --border: var(--gold-primary); /* Gold borders everywhere */
+  --input: var(--gold-primary);
+  --ring: var(--gold-primary);
   
-  --sidebar: oklch(0.97 0.01 90);
-  --sidebar-foreground: oklch(0.25 0.02 80);
-  --sidebar-primary: oklch(0.45 0.05 140);
-  --sidebar-primary-foreground: oklch(0.98 0.01 90);
-  --sidebar-accent: oklch(0.94 0.02 95);
-  --sidebar-accent-foreground: oklch(0.3 0.03 80);
-  --sidebar-border: oklch(0.88 0.01 90);
-  --sidebar-ring: oklch(0.45 0.05 140);
+  --radius: 1rem; /* Soft rounded corners */
+  
+  --sidebar: oklch(0.96 0.02 95);
+  --sidebar-foreground: oklch(0.3 0.05 50);
+  --sidebar-primary: var(--gold-primary);
+  --sidebar-primary-foreground: oklch(0.2 0.05 85);
+  --sidebar-accent: oklch(0.95 0.05 85);
+  --sidebar-accent-foreground: oklch(0.35 0.05 50);
+  --sidebar-border: var(--gold-primary);
+  --sidebar-ring: var(--gold-primary);
 }
 
-/* 
-  THEME 2: Nocturnal Noir
-  Modern Brutalism / High-Contrast Luxury
-  Deep blacks, midnight blues, sharp whites, metallic gold
-*/
+/* Keep other themes as fallbacks or alternatives if needed, but updated to match structure */
 :root[data-theme="nocturnal"] {
   --font-serif-family: "Playfair Display", serif;
   --font-sans-family: "DM Sans", sans-serif;
-  
-  --primary: oklch(0.85 0.15 85); /* Gold/Copper */
+  --primary: oklch(0.85 0.15 85);
   --primary-foreground: oklch(0.15 0.05 260);
-  
-  --background: oklch(0.15 0.05 260); /* Midnight Blue/Black */
-  --foreground: oklch(0.95 0.01 260); /* Sharp White */
-  
+  --background: oklch(0.15 0.05 260);
+  --foreground: oklch(0.95 0.01 260);
   --card: oklch(0.18 0.05 260);
   --card-foreground: oklch(0.95 0.01 260);
-  
   --popover: oklch(0.18 0.05 260);
   --popover-foreground: oklch(0.95 0.01 260);
-  
   --secondary: oklch(0.25 0.05 260);
   --secondary-foreground: oklch(0.95 0.01 260);
-  
   --muted: oklch(0.3 0.05 260);
   --muted-foreground: oklch(0.7 0.05 260);
-  
   --accent: oklch(0.25 0.05 260);
   --accent-foreground: oklch(0.95 0.01 260);
-  
   --destructive: oklch(0.6 0.2 20);
   --destructive-foreground: oklch(0.98 0 0);
-  
   --border: oklch(0.3 0.05 260);
   --input: oklch(0.3 0.05 260);
   --ring: oklch(0.85 0.15 85);
-  
-  --radius: 0px; /* Sharp corners for Brutalism */
-  
+  --radius: 0px;
   --sidebar: oklch(0.15 0.05 260);
   --sidebar-foreground: oklch(0.95 0.01 260);
   --sidebar-primary: oklch(0.85 0.15 85);
@@ -165,45 +154,29 @@
   --sidebar-ring: oklch(0.85 0.15 85);
 }
 
-/* 
-  THEME 3: Botanical Breeze
-  Contemporary Japandi
-  Soft creams, pale greens, warm wood, rounded
-*/
 :root[data-theme="botanical"] {
   --font-serif-family: "Lora", serif;
   --font-sans-family: "Mulish", sans-serif;
-  
-  --primary: oklch(0.65 0.15 145); /* Fresh Green */
+  --primary: oklch(0.65 0.15 145);
   --primary-foreground: oklch(0.98 0.01 100);
-  
-  --background: oklch(0.98 0.01 100); /* Soft White */
-  --foreground: oklch(0.3 0.05 50); /* Warm Brown/Grey */
-  
-  --card: oklch(0.96 0.02 110); /* Pale Cream/Green tint */
+  --background: oklch(0.98 0.01 100);
+  --foreground: oklch(0.3 0.05 50);
+  --card: oklch(0.96 0.02 110);
   --card-foreground: oklch(0.3 0.05 50);
-  
   --popover: oklch(0.96 0.02 110);
   --popover-foreground: oklch(0.3 0.05 50);
-  
   --secondary: oklch(0.92 0.05 110);
   --secondary-foreground: oklch(0.35 0.05 50);
-  
   --muted: oklch(0.94 0.03 110);
   --muted-foreground: oklch(0.6 0.05 50);
-  
   --accent: oklch(0.92 0.05 110);
   --accent-foreground: oklch(0.35 0.05 50);
-  
   --destructive: oklch(0.6 0.2 25);
   --destructive-foreground: oklch(0.98 0 0);
-  
   --border: oklch(0.9 0.03 110);
   --input: oklch(0.9 0.03 110);
   --ring: oklch(0.65 0.15 145);
-  
-  --radius: 1.5rem; /* Extra rounded for friendly feel */
-  
+  --radius: 1.5rem;
   --sidebar: oklch(0.98 0.01 100);
   --sidebar-foreground: oklch(0.3 0.05 50);
   --sidebar-primary: oklch(0.65 0.15 145);
@@ -222,9 +195,10 @@
     @apply bg-background text-foreground font-sans antialiased transition-colors duration-500;
   }
   
-  /* Theme-specific background textures */
+  /* Paper Texture Background for Earthen/Paper Theme */
   :root[data-theme="earthen"] body, :root:not([data-theme]) body {
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+    background-color: oklch(0.96 0.02 95);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
   }
   
   :root[data-theme="nocturnal"] body {
@@ -265,19 +239,34 @@
     @apply px-6 mx-auto w-full;
   }
   
+  /* Paper & Gold Button Styles */
   .btn-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-[var(--radius)] px-8 font-medium transition-all active:scale-95 shadow-sm;
+    @apply bg-background text-foreground border-2 border-primary hover:bg-primary/5 h-12 rounded-[var(--radius)] px-8 font-medium transition-all active:scale-95 shadow-[2px_2px_4px_rgba(0,0,0,0.1),-1px_-1px_2px_rgba(255,255,255,0.8)];
+    /* Gold Foil Gradient Text Effect */
+    background: linear-gradient(135deg, oklch(0.98 0.01 95) 0%, oklch(0.94 0.02 95) 100%);
   }
   
   .btn-secondary {
-    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 h-12 rounded-[var(--radius)] px-8 font-medium transition-all active:scale-95;
+    @apply bg-secondary text-secondary-foreground border border-primary/30 hover:bg-secondary/80 h-12 rounded-[var(--radius)] px-8 font-medium transition-all active:scale-95 shadow-[inset_1px_1px_2px_rgba(0,0,0,0.05)];
   }
   
   .btn-outline {
-    @apply border border-input bg-transparent hover:bg-accent hover:text-accent-foreground h-12 rounded-[var(--radius)] px-8 font-medium transition-all active:scale-95;
+    @apply border-2 border-primary bg-transparent text-foreground hover:bg-primary/5 h-12 rounded-[var(--radius)] px-8 font-medium transition-all active:scale-95;
   }
   
-  .card-glass {
-    @apply bg-white/80 backdrop-blur-sm border border-white/20 shadow-sm;
+  /* Paper Card Style - Embossed & Textured */
+  .card-paper {
+    @apply bg-card border-2 border-primary/60 rounded-[var(--radius)] shadow-[4px_4px_10px_rgba(0,0,0,0.05),-2px_-2px_5px_rgba(255,255,255,0.8)] relative overflow-hidden;
+  }
+  
+  /* Inner shadow for "pressed" elements */
+  .paper-pressed {
+    @apply shadow-[inset_2px_2px_5px_rgba(0,0,0,0.05),inset_-2px_-2px_5px_rgba(255,255,255,0.8)] bg-secondary/50 border border-primary/20;
+  }
+  
+  /* Gold Foil Text Effect */
+  .text-gold {
+    @apply text-primary font-serif tracking-wide;
+    text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
   }
 }
