@@ -1,25 +1,45 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Camera, Utensils, Wine, Clock, Home, BookOpen, ConciergeBell } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useStore } from "@/lib/store";
 
 export default function DiningStatus() {
   const [, setLocation] = useLocation();
+  const { cart } = useStore();
 
-  // Mock progress state
-  const [currentStep, setCurrentStep] = useState("mains");
+  // Define standard course order
+  const courseOrder = ["starters", "mains", "desserts"];
+  
+  // Filter items by category
+  const starters = cart.filter(item => item.category === "starters");
+  const mains = cart.filter(item => item.category === "mains");
+  const desserts = cart.filter(item => item.category === "desserts");
+  const drinks = cart.filter(item => item.category === "cocktails" || item.category === "wine" || item.category === "drinks");
 
+  // Determine initial step based on what's ordered
+  const [currentStep, setCurrentStep] = useState(() => {
+    if (starters.length > 0) return "starters";
+    if (mains.length > 0) return "mains";
+    if (desserts.length > 0) return "desserts";
+    return "finish";
+  });
+
+  // Build dynamic steps
   const steps = [
-    { id: "starters", label: "Starters" },
-    { id: "wine", label: "Wine" },
-    { id: "mains", label: "Mains" },
-    { id: "dessert", label: "Dessert" },
+    ...(starters.length > 0 ? [{ id: "starters", label: "Starters" }] : []),
+    ...(drinks.length > 0 ? [{ id: "drinks", label: "Drinks" }] : []), // Optional drinks step
+    ...(mains.length > 0 ? [{ id: "mains", label: "Mains" }] : []),
+    ...(desserts.length > 0 ? [{ id: "dessert", label: "Dessert" }] : []),
     { id: "finish", label: "Finish" },
   ];
 
+  // If no food ordered, just show finish or default
+  const activeSteps = steps.length > 1 ? steps : [{ id: "finish", label: "Finish" }];
+
   const getStepStatus = (stepId: string) => {
-    const stepIds = steps.map(s => s.id);
+    const stepIds = activeSteps.map(s => s.id);
     const currentIndex = stepIds.indexOf(currentStep);
     const stepIndex = stepIds.indexOf(stepId);
     
@@ -27,6 +47,36 @@ export default function DiningStatus() {
     if (stepIndex === currentIndex) return "active";
     return "pending";
   };
+
+  // Get items for current step
+  const getCurrentItems = () => {
+    switch (currentStep) {
+      case "starters": return starters;
+      case "mains": return mains;
+      case "dessert": return desserts;
+      case "drinks": return drinks;
+      default: return [];
+    }
+  };
+
+  // Get items for next step
+  const getNextStepItems = () => {
+    const stepIds = activeSteps.map(s => s.id);
+    const currentIndex = stepIds.indexOf(currentStep);
+    if (currentIndex >= stepIds.length - 1) return null;
+    
+    const nextStepId = stepIds[currentIndex + 1];
+    switch (nextStepId) {
+      case "starters": return starters;
+      case "mains": return mains;
+      case "dessert": return desserts;
+      case "drinks": return drinks;
+      default: return null;
+    }
+  };
+
+  const currentItems = getCurrentItems();
+  const nextItems = getNextStepItems();
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
@@ -77,16 +127,16 @@ export default function DiningStatus() {
         {/* Ritual Progress */}
         <div className="space-y-4">
           <h2 className="font-serif text-lg text-gold text-center">Tonight's Ritual Progress</h2>
-          <div className="flex justify-between items-center px-2 relative py-4">
+          <div className="flex justify-between items-center px-2 relative py-4 overflow-x-auto">
             {/* Connecting Line */}
-            <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-[2px] bg-primary/20 -z-10" />
+            <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-[2px] bg-primary/20 -z-10 min-w-[300px]" />
             
-            {steps.map((step) => {
+            {activeSteps.map((step) => {
               const status = getStepStatus(step.id);
               return (
                 <div 
                   key={step.id} 
-                  className="flex flex-col items-center gap-2 cursor-pointer group"
+                  className="flex flex-col items-center gap-2 cursor-pointer group min-w-[60px]"
                   onClick={() => setCurrentStep(step.id)}
                 >
                   <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center z-10 transition-all shadow-sm
@@ -107,45 +157,44 @@ export default function DiningStatus() {
         </div>
 
         {/* Current Course Card - Embossed Paper */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card-paper overflow-hidden"
-        >
-          <div className="bg-primary/5 p-3 border-b border-primary/10 flex justify-between items-center">
-            <span className="text-sm font-medium text-gold uppercase tracking-wider font-serif">Current Course: Mains</span>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Clock className="w-3 h-3" />
-              <span>Est. 8-12 mins</span>
-            </div>
-          </div>
-          
-          <div className="p-6 space-y-6">
-            {/* Dish */}
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center flex-shrink-0 border border-primary/20 shadow-inner">
-                <Utensils className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-serif text-xl text-foreground">Wagyu Ribeye</h3>
-                <p className="text-sm text-muted-foreground italic">Medium Rare</p>
+        {currentStep !== 'finish' && currentItems.length > 0 ? (
+          <motion.div 
+            key={currentStep}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="card-paper overflow-hidden"
+          >
+            <div className="bg-primary/5 p-3 border-b border-primary/10 flex justify-between items-center">
+              <span className="text-sm font-medium text-gold uppercase tracking-wider font-serif">Current Course: {activeSteps.find(s => s.id === currentStep)?.label}</span>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Clock className="w-3 h-3" />
+                <span>Est. 8-12 mins</span>
               </div>
             </div>
-
-            <div className="h-[1px] bg-primary/10 w-full" />
-
-            {/* Wine Pairing */}
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center flex-shrink-0 border border-primary/20 shadow-inner">
-                <Wine className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-serif text-xl text-foreground">2015 Château Margaux</h3>
-                <p className="text-sm text-muted-foreground italic">Sommelier: John</p>
-              </div>
+            
+            <div className="p-6 space-y-6">
+              {currentItems.map((item, index) => (
+                <div key={`${item.id}-${index}`}>
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center flex-shrink-0 border border-primary/20 shadow-inner">
+                      <Utensils className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-serif text-xl text-foreground">{item.name}</h3>
+                      {item.selectedVariationName && <p className="text-sm text-muted-foreground italic">{item.selectedVariationName}</p>}
+                      <p className="text-sm text-muted-foreground italic">Qty: {item.quantity}</p>
+                    </div>
+                  </div>
+                  {index < currentItems.length - 1 && <div className="h-[1px] bg-primary/10 w-full my-4" />}
+                </div>
+              ))}
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        ) : currentStep !== 'finish' ? (
+           <div className="card-paper p-6 text-center text-muted-foreground italic">
+             No items ordered for this course.
+           </div>
+        ) : null}
 
         {/* Service Actions */}
         <div className="space-y-4">
@@ -171,14 +220,7 @@ export default function DiningStatus() {
         </div>
 
         {/* Next Course Preview / Finish State */}
-        {currentStep === 'dessert' ? (
-          <div className="card-paper p-4 bg-secondary/30 border-dashed border-primary/30">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 font-serif">Up Next</p>
-            <div className="flex items-center justify-between">
-              <span className="font-serif text-foreground text-lg">All dishes served. Would you like anything else?</span>
-            </div>
-          </div>
-        ) : currentStep === 'finish' ? (
+        {currentStep === 'finish' ? (
           <div className="space-y-4">
             <div className="card-paper p-6 bg-primary/5 border-primary/30 text-center">
               <p className="text-xs text-gold uppercase tracking-widest mb-2 font-serif">Dining Complete</p>
@@ -192,15 +234,22 @@ export default function DiningStatus() {
               Proceed to Payment
             </Button>
           </div>
-        ) : (
+        ) : nextItems && nextItems.length > 0 ? (
           <div className="card-paper p-4 bg-secondary/30 border-dashed border-primary/30">
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 font-serif">Up Next</p>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="text-xl">🍮</span>
-                <span className="font-serif text-foreground text-lg">Chocolate Lava Cake</span>
+                <span className="text-xl">🍽️</span>
+                <span className="font-serif text-foreground text-lg">{nextItems[0].name} {nextItems.length > 1 && `+ ${nextItems.length - 1} more`}</span>
               </div>
-              <span className="text-xs text-muted-foreground font-medium">~12 mins</span>
+              <span className="text-xs text-muted-foreground font-medium">~15 mins</span>
+            </div>
+          </div>
+        ) : (
+          <div className="card-paper p-4 bg-secondary/30 border-dashed border-primary/30">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 font-serif">Up Next</p>
+            <div className="flex items-center justify-between">
+              <span className="font-serif text-foreground text-lg">All dishes served. Would you like anything else?</span>
             </div>
           </div>
         )}
