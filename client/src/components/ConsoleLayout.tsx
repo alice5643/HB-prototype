@@ -45,8 +45,8 @@ export function ConsoleLayout({ children }: ConsoleLayoutProps) {
 
       {/* Sidebar */}
       <div className={cn(
-        "fixed lg:static inset-y-0 left-0 z-50 w-64 border-r border-[#E5E0D6] bg-[#FDFBF7] flex flex-col transition-transform duration-300 ease-in-out lg:transform-none",
-        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        "fixed lg:static inset-y-0 left-0 z-50 w-64 border-r border-[#E5E0D6] bg-[#FDFBF7] flex flex-col transition-transform duration-300 ease-in-out",
+        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
         <div className="p-6 hidden lg:block">
           <h1 className="text-xl font-serif font-bold text-[#5C4033]">Harbour Beat</h1>
