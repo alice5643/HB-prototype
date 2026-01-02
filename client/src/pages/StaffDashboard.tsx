@@ -15,7 +15,8 @@ import {
   MapPin,
   Search,
   Filter,
-  MoreHorizontal
+  MoreHorizontal,
+  Bell
 } from 'lucide-react';
 
 // Timer Component
@@ -40,7 +41,7 @@ const TableTimer = ({ startTime }: { startTime?: number }) => {
 };
 
 export default function StaffDashboard() {
-  const { serviceRequests, updateServiceRequestStatus, orders, toggleOrderServed, sharingModel, partySize, tables, updateTableStatus, joinTables, splitTable, resetTables } = useStore();
+  const { serviceRequests, updateServiceRequestStatus, orders, toggleOrderServed, sharingModel, partySize, tables, updateTableStatus, joinTables, splitTable, resetTables, simulateRequest } = useStore();
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false); // State for join mode
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
@@ -128,6 +129,13 @@ export default function StaffDashboard() {
               <span className="text-xs font-medium text-[#5C4033]">Live Service</span>
             </div>
             <button 
+              className="px-3 py-1.5 bg-[#FFFBF0] border border-[#D4AF37]/30 rounded-full text-[#8B4513] text-xs font-bold uppercase tracking-wider hover:bg-[#F5F2EA] transition-colors flex items-center gap-1"
+              onClick={simulateRequest}
+            >
+              <Bell className="w-3 h-3" />
+              Simulate
+            </button>
+            <button 
               className="p-2 hover:bg-[#D4AF37]/10 rounded-full transition-colors text-[#5C4033] text-xs font-medium flex items-center gap-1"
               onClick={() => {
                 if (confirm('Reset floor plan to default state?')) {
@@ -152,6 +160,12 @@ export default function StaffDashboard() {
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onWheel={handleWheel}
+            onClick={(e) => {
+              // Only deselect if clicking the background (not a table) and not dragging
+              if (e.target === e.currentTarget && !isDragging) {
+                setSelectedTableId(null);
+              }
+            }}
             ref={mapRef}
           >
             {/* Grid Pattern Background */}

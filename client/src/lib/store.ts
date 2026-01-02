@@ -81,6 +81,7 @@ interface AppState {
   joinTables: (sourceTableId: string, targetTableId: string) => void;
   splitTable: (tableId: string) => void;
   resetTables: () => void;
+  simulateRequest: () => void;
 }
 
 export const useStore = create<AppState>()(
@@ -316,6 +317,42 @@ export const useStore = create<AppState>()(
             }
             return table;
           })
+        };
+      }),
+
+      simulateRequest: () => set((state: AppState) => {
+        const requestTypes = ['refill', 'cutlery', 'condiment', 'side', 'custom', 'bill'] as const;
+        const randomType = requestTypes[Math.floor(Math.random() * requestTypes.length)];
+        
+        // Filter for visible tables only
+        const visibleTables = state.tables.filter(t => t.status !== 'hidden');
+        if (visibleTables.length === 0) return {};
+        
+        const randomTable = visibleTables[Math.floor(Math.random() * visibleTables.length)];
+        // Extract table number from name (e.g., "T12" -> "12", "B1" -> "1")
+        // If merged (e.g. "T1+T2"), just pick the first part or use the name as is if logic supports it
+        // The dashboard expects tableNumber to match the name without prefix for T/B usually, 
+        // but let's just use the name directly if it's complex, or strip T/B if simple.
+        let tableNum = randomTable.name;
+        if (tableNum.startsWith('T') || tableNum.startsWith('B')) {
+           // Only strip if it's a simple T12 or B1, not T1+T2
+           if (!tableNum.includes('+')) {
+             tableNum = tableNum.substring(1);
+           }
+        }
+
+        return {
+          serviceRequests: [
+            {
+              id: Math.random().toString(36).substring(2, 9),
+              type: randomType,
+              details: randomType === 'custom' ? 'Customer needs assistance' : '',
+              status: 'pending',
+              timestamp: Date.now(),
+              tableNumber: tableNum
+            },
+            ...state.serviceRequests
+          ]
         };
       }),
 
