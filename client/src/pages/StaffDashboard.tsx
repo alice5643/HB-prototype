@@ -264,7 +264,6 @@ export default function StaffDashboard() {
               </div>
             </div>
           </div>
-
           {/* Right: Action Panel (Static on Desktop, Slide-over on Mobile) */}
           <AnimatePresence mode="wait">
             {(selectedTableId || window.innerWidth >= 768) && (
@@ -280,9 +279,8 @@ export default function StaffDashboard() {
               >
                 {selectedTableId ? (
                   <>
-                    {/* Panel Header */}
-                    <div className="p-6 border-b border-[#F5F2EA] bg-[#FFFBF0]">
-                      <div className="flex justify-between items-start mb-4">
+                    {/* Header */}
+                    <div className="p-4 border-b border-[#F5F2EA] bg-[#FFFBF0] flex justify-between items-start">
                         <div>
                           <h2 className="font-serif text-2xl text-[#2C2C2C]">Table {tables.find(t => t.id === selectedTableId)?.name}</h2>
                           <p className="text-[#8B4513] text-sm">Main Dining Room • {tables.find(t => t.id === selectedTableId)?.seats} Guests</p>
@@ -348,7 +346,7 @@ export default function StaffDashboard() {
                           Tap another table to merge it into this one
                         </p>
                       )}
-                    </div>
+                    {/* Removed extra closing div */}
 
                     {/* Requests & Orders List */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-[#FAFAFA]">
@@ -504,15 +502,57 @@ export default function StaffDashboard() {
                     </div>
                   </>
                 ) : (
-                  /* Empty State for Desktop Panel */
-                  <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-[#FAFAFA]">
-                    <div className="w-20 h-20 rounded-full bg-[#FFFBF0] flex items-center justify-center mb-6 border border-[#D4AF37]/20">
-                      <MapPin className="w-8 h-8 text-[#D4AF37]" />
+                  <div className="flex-1 flex flex-col bg-[#FAFAFA]">
+                    <div className="p-6 border-b border-[#E5E5E5] bg-white">
+                      <h2 className="font-serif text-xl font-bold text-[#2C2C2C]">Shift Activity</h2>
+                      <p className="text-xs text-[#8B4513] uppercase tracking-wider mt-1">Live Feed • {serviceRequests.length} Requests</p>
                     </div>
-                    <h2 className="font-serif text-2xl text-[#2C2C2C] mb-2">Select a Table</h2>
-                    <p className="text-[#5C4033] max-w-[200px]">
-                      Tap on any table in the floor plan to view details and manage requests.
-                    </p>
+                    
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                      {serviceRequests.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full text-[#8B4513]/40">
+                          <Clock className="w-12 h-12 mb-3 opacity-20" />
+                          <p className="text-sm">No activity yet</p>
+                        </div>
+                      ) : (
+                        serviceRequests.sort((a, b) => b.timestamp - a.timestamp).map((req) => (
+                          <div 
+                            key={req.id}
+                            className="bg-white p-4 rounded-xl border border-[#E5E5E5] shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                            onClick={() => {
+                              // Find table by name (assuming tableNumber matches name without T/B prefix logic for now, or just try to find it)
+                              // The store saves tableNumber as string.
+                              const table = tables.find(t => t.name === `T${req.tableNumber}` || t.name === `B${req.tableNumber}` || t.name === req.tableNumber);
+                              if (table) setSelectedTableId(table.id);
+                            }}
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="font-serif font-bold text-[#2C2C2C] bg-[#F5F2EA] px-2 py-1 rounded text-sm">
+                                  {req.tableNumber.startsWith('T') || req.tableNumber.startsWith('B') ? req.tableNumber : `T${req.tableNumber}`}
+                                </span>
+                                <span className="text-xs text-gray-400">
+                                  {format(req.timestamp, 'h:mm a')}
+                                </span>
+                              </div>
+                              <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${
+                                req.status === 'pending' ? 'bg-red-100 text-red-600' :
+                                req.status === 'acknowledged' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-green-100 text-green-700'
+                              }`}>
+                                {req.status}
+                              </span>
+                            </div>
+                            <p className="text-sm font-medium text-[#5C4033]">
+                              {req.type === 'custom' ? req.details : req.type.charAt(0).toUpperCase() + req.type.slice(1)}
+                            </p>
+                            {req.type !== 'custom' && req.details && (
+                              <p className="text-xs text-gray-500 mt-1">{req.details}</p>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </div>
                 )}
               </motion.div>

@@ -297,9 +297,22 @@ export const useStore = create<AppState>()(
                 originalSeats: undefined
               };
             }
-            // Unhide all tables that were merged into this one
+            // Unhide all tables that were merged into this one AND recursively reset them
+            // This ensures that if T2 was merged into T1, and T3 was merged into T2, splitting T1 restores T2 and T3 fully.
+            // Actually, our current join logic flattens everything into the target table's mergedIds list.
+            // So we just need to make sure we reset any potential "merged" state on the restored tables too, just in case.
             if (idsToRestore.includes(table.id)) {
-              return { ...table, status: 'available' };
+              return { 
+                ...table, 
+                status: 'available',
+                // Reset these just in case they had leftover state, though they shouldn't if hidden
+                mergedIds: [],
+                originalName: undefined,
+                originalSeats: undefined,
+                // If we want to restore their original name if they were renamed before hiding (unlikely in current logic but safe)
+                name: table.originalName || table.name,
+                seats: table.originalSeats || table.seats
+              };
             }
             return table;
           })
