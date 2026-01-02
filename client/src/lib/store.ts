@@ -16,6 +16,7 @@ export interface Table {
   seats: number;
   x: number;
   y: number;
+  floor: number;
   status: TableStatus;
   seatedTime?: number; // Timestamp when table became occupied
   mergedIds?: string[]; // IDs of tables merged into this one
@@ -101,26 +102,33 @@ export const useStore = create<AppState>()(
       orderStatus: 'pending',
       serviceRequests: [],
       tables: [
-        { id: '1', name: 'T1', seats: 2, x: 100, y: 100, status: 'occupied', seatedTime: Date.now() - 1000 * 60 * 45 },
-        { id: '2', name: 'T2', seats: 2, x: 100, y: 250, status: 'available' },
-        { id: '3', name: 'T3', seats: 4, x: 300, y: 100, status: 'occupied', seatedTime: Date.now() - 1000 * 60 * 15 },
-        { id: '4', name: 'T4', seats: 4, x: 300, y: 250, status: 'reserved' },
-        { id: '5', name: 'T5', seats: 6, x: 550, y: 180, status: 'occupied', seatedTime: Date.now() - 1000 * 60 * 90 },
-        { id: '6', name: 'T6', seats: 2, x: 800, y: 100, status: 'available' },
-        { id: '7', name: 'T7', seats: 4, x: 800, y: 250, status: 'occupied', seatedTime: Date.now() - 1000 * 60 * 30 },
-        { id: '8', name: 'T8', seats: 8, x: 550, y: 400, status: 'reserved' },
-        { id: '12', name: 'T12', seats: 4, x: 300, y: 400, status: 'occupied', seatedTime: Date.now() - 1000 * 60 * 5 },
-        // Bar Stools
-        { id: 'b1', name: 'B1', seats: 1, x: 1100, y: 100, status: 'available' },
-        { id: 'b2', name: 'B2', seats: 1, x: 1100, y: 160, status: 'available' },
-        { id: 'b3', name: 'B3', seats: 1, x: 1100, y: 220, status: 'occupied', seatedTime: Date.now() - 1000 * 60 * 20 },
-        { id: 'b4', name: 'B4', seats: 1, x: 1100, y: 280, status: 'available' },
-        { id: 'b5', name: 'B5', seats: 1, x: 1100, y: 340, status: 'available' },
-        { id: 'b6', name: 'B6', seats: 1, x: 1100, y: 400, status: 'available' },
-        { id: 'b7', name: 'B7', seats: 1, x: 1100, y: 460, status: 'occupied', seatedTime: Date.now() - 1000 * 60 * 10 },
-        { id: 'b8', name: 'B8', seats: 1, x: 1100, y: 520, status: 'available' },
-        { id: 'b9', name: 'B9', seats: 1, x: 1100, y: 580, status: 'available' },
-        { id: 'b10', name: 'B10', seats: 1, x: 1100, y: 640, status: 'available' },
+        // 1st Floor
+        { id: '1', name: 'T1', seats: 2, x: 100, y: 100, floor: 1, status: 'occupied', seatedTime: Date.now() - 1000 * 60 * 45 },
+        { id: '2', name: 'T2', seats: 2, x: 100, y: 250, floor: 1, status: 'available' },
+        { id: '3', name: 'T3', seats: 4, x: 300, y: 100, floor: 1, status: 'occupied', seatedTime: Date.now() - 1000 * 60 * 15 },
+        { id: '4', name: 'T4', seats: 4, x: 300, y: 250, floor: 1, status: 'reserved' },
+        { id: '5', name: 'T5', seats: 6, x: 550, y: 180, floor: 1, status: 'occupied', seatedTime: Date.now() - 1000 * 60 * 90 },
+        { id: '6', name: 'T6', seats: 2, x: 800, y: 100, floor: 1, status: 'available' },
+        { id: '7', name: 'T7', seats: 4, x: 800, y: 250, floor: 1, status: 'occupied', seatedTime: Date.now() - 1000 * 60 * 30 },
+        { id: '8', name: 'T8', seats: 8, x: 550, y: 400, floor: 1, status: 'reserved' },
+        { id: '12', name: 'T12', seats: 4, x: 300, y: 400, floor: 1, status: 'occupied', seatedTime: Date.now() - 1000 * 60 * 5 },
+        // Bar Stools (1st Floor)
+        { id: 'b1', name: 'B1', seats: 1, x: 1100, y: 100, floor: 1, status: 'available' },
+        { id: 'b2', name: 'B2', seats: 1, x: 1100, y: 160, floor: 1, status: 'available' },
+        { id: 'b3', name: 'B3', seats: 1, x: 1100, y: 220, floor: 1, status: 'occupied', seatedTime: Date.now() - 1000 * 60 * 20 },
+        { id: 'b4', name: 'B4', seats: 1, x: 1100, y: 280, floor: 1, status: 'available' },
+        { id: 'b5', name: 'B5', seats: 1, x: 1100, y: 340, floor: 1, status: 'available' },
+        { id: 'b6', name: 'B6', seats: 1, x: 1100, y: 400, floor: 1, status: 'available' },
+        { id: 'b7', name: 'B7', seats: 1, x: 1100, y: 460, floor: 1, status: 'occupied', seatedTime: Date.now() - 1000 * 60 * 10 },
+        { id: 'b8', name: 'B8', seats: 1, x: 1100, y: 520, floor: 1, status: 'available' },
+        { id: 'b9', name: 'B9', seats: 1, x: 1100, y: 580, floor: 1, status: 'available' },
+        { id: 'b10', name: 'B10', seats: 1, x: 1100, y: 640, floor: 1, status: 'available' },
+        // 2nd Floor
+        { id: '201', name: 'T201', seats: 4, x: 200, y: 200, floor: 2, status: 'available' },
+        { id: '202', name: 'T202', seats: 4, x: 400, y: 200, floor: 2, status: 'available' },
+        { id: '203', name: 'T203', seats: 6, x: 600, y: 200, floor: 2, status: 'reserved' },
+        // 3rd Floor
+        { id: '301', name: 'T301', seats: 8, x: 400, y: 300, floor: 3, status: 'available' },
       ],
       
       setPartySize: (size: PartySize) => set({ partySize: size }),

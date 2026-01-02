@@ -13,7 +13,8 @@ import {
   LayoutTemplate,
   Armchair,
   Sofa,
-  Users
+  Users,
+  Layers
 } from 'lucide-react';
 import { ConsoleLayout } from '@/components/ConsoleLayout';
 import { Button } from '@/components/ui/button';
@@ -27,11 +28,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 export default function ConsoleVenue() {
   const { tables, updateTableStatus, resetTables } = useStore();
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [currentFloor, setCurrentFloor] = useState(1);
   
   // Map State
   const mapRef = useRef<HTMLDivElement>(null);
@@ -64,9 +67,6 @@ export default function ConsoleVenue() {
         x: e.clientX - dragStart.x,
         y: e.clientY - dragStart.y
       });
-    } else if (draggedTable && isEditing) {
-      // Handle table dragging logic here if needed for smooth updates
-      // Currently handled by motion.div drag prop
     }
   };
 
@@ -101,14 +101,12 @@ export default function ConsoleVenue() {
   };
 
   const handleSaveChanges = () => {
-    // In a real app, this would update the backend
-    // For now, we'll just update the store (if we had a setTables action)
-    // Since we don't have setTables, we'll simulate saving
     toast.success("Floor plan saved successfully");
     setIsEditing(false);
   };
 
   const selectedTable = localTables.find(t => t.id === selectedTableId);
+  const floorTables = localTables.filter(t => t.floor === currentFloor && t.status !== 'hidden');
 
   return (
     <ConsoleLayout>
@@ -116,10 +114,31 @@ export default function ConsoleVenue() {
         {/* Header */}
         <div className="px-8 py-6 border-b border-[#E5E0D6] bg-white flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-serif font-bold text-[#5C4033]">Venue Setup</h1>
-            <p className="text-[#8B4513] mt-1">Configure your floor plan and table arrangements</p>
+            <h1 className="text-3xl font-serif font-bold text-[#5C4033]">Table View</h1>
+            <p className="text-[#8B4513] mt-1">Manage your restaurant layout by floor</p>
           </div>
           <div className="flex items-center gap-3">
+            {/* Floor Toggles */}
+            <div className="flex bg-[#F5F2EA] p-1 rounded-lg mr-4">
+              {[1, 2, 3].map((floor) => (
+                <button
+                  key={floor}
+                  onClick={() => {
+                    setCurrentFloor(floor);
+                    setSelectedTableId(null);
+                  }}
+                  className={cn(
+                    "px-4 py-2 rounded-md text-sm font-medium transition-all",
+                    currentFloor === floor
+                      ? "bg-white text-[#5C4033] shadow-sm"
+                      : "text-[#8B4513]/60 hover:text-[#8B4513]"
+                  )}
+                >
+                  {floor === 1 ? '1st Floor' : floor === 2 ? '2nd Floor' : '3rd Floor'}
+                </button>
+              ))}
+            </div>
+
             {isEditing ? (
               <>
                 <Button 
@@ -156,7 +175,7 @@ export default function ConsoleVenue() {
         <div className="flex-1 flex overflow-hidden">
           {/* Map Area */}
           <div 
-            className="flex-1 bg-[#F0EAD6] relative overflow-hidden cursor-grab active:cursor-grabbing"
+            className="flex-1 bg-[#F9F9F9] relative overflow-hidden cursor-grab active:cursor-grabbing"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -166,7 +185,7 @@ export default function ConsoleVenue() {
           >
             {/* Grid Pattern */}
             <div 
-              className="absolute inset-0 opacity-10 pointer-events-none"
+              className="absolute inset-0 opacity-[0.03] pointer-events-none"
               style={{
                 backgroundImage: 'radial-gradient(#8B4513 1px, transparent 1px)',
                 backgroundSize: '20px 20px',
@@ -175,34 +194,52 @@ export default function ConsoleVenue() {
             />
 
             {/* Controls Overlay */}
-            <div className="absolute top-4 right-4 flex flex-col gap-2 z-20">
+            <div className="absolute bottom-8 right-8 flex flex-col gap-2 z-20">
+              <div className="bg-white rounded-lg shadow-lg border border-[#E5E0D6] p-1 flex flex-col">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 hover:bg-[#F5F2EA]"
+                  onClick={() => setScale(s => Math.min(s + 0.1, 3))}
+                >
+                  <ZoomIn className="w-4 h-4 text-[#5C4033]" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 hover:bg-[#F5F2EA]"
+                  onClick={() => setScale(s => Math.max(s - 0.1, 0.5))}
+                >
+                  <ZoomOut className="w-4 h-4 text-[#5C4033]" />
+                </Button>
+              </div>
               <Button
                 variant="secondary"
-                size="icon"
-                className="bg-white shadow-md hover:bg-[#F5F2EA]"
-                onClick={() => setScale(s => Math.min(s + 0.1, 3))}
-              >
-                <ZoomIn className="w-4 h-4 text-[#5C4033]" />
-              </Button>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="bg-white shadow-md hover:bg-[#F5F2EA]"
-                onClick={() => setScale(s => Math.max(s - 0.1, 0.5))}
-              >
-                <ZoomOut className="w-4 h-4 text-[#5C4033]" />
-              </Button>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="bg-white shadow-md hover:bg-[#F5F2EA]"
+                className="bg-white shadow-lg border border-[#E5E0D6] text-[#5C4033] hover:bg-[#F5F2EA]"
                 onClick={() => {
                   setPan({ x: 0, y: 0 });
                   setScale(1);
                 }}
               >
-                <RotateCcw className="w-4 h-4 text-[#5C4033]" />
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Scale to Fit
               </Button>
+            </div>
+
+            {/* Legend Overlay */}
+            <div className="absolute bottom-8 left-8 bg-white rounded-full shadow-lg border border-[#E5E0D6] px-6 py-3 flex items-center gap-6 z-20">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-[#5C4033]" />
+                <span className="text-sm font-medium text-[#5C4033]">Available : {floorTables.filter(t => t.status === 'available').length}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-[#2563EB]" />
+                <span className="text-sm font-medium text-[#5C4033]">Dine in : {floorTables.filter(t => t.status === 'occupied').length}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-[#EF4444]" />
+                <span className="text-sm font-medium text-[#5C4033]">Reserved : {floorTables.filter(t => t.status === 'reserved').length}</span>
+              </div>
             </div>
 
             {/* Map Container */}
@@ -211,14 +248,27 @@ export default function ConsoleVenue() {
               style={{ x: pan.x, y: pan.y, scale: scale }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
-              {localTables.filter(t => t.status !== 'hidden').map((table) => {
+              {floorTables.map((table) => {
                 const isSelected = selectedTableId === table.id;
                 
                 // Determine style based on status
-                let statusStyles = 'bg-white border-[#E5E5E5]';
-                if (table.status === 'occupied') statusStyles = 'bg-white border-[#2C2C2C] border-2';
-                if (table.status === 'reserved') statusStyles = 'bg-[#F5F2EA] border-dashed border-[#8B4513]/30';
-                if (isSelected) statusStyles = 'bg-[#D4AF37] border-[#D4AF37] text-white shadow-xl z-10';
+                let bgClass = 'bg-white';
+                let textClass = 'text-[#5C4033]';
+                let borderClass = 'border-transparent';
+                let statusIndicatorClass = 'bg-[#F3F4F6] text-[#6B7280]'; // Default gray
+
+                if (table.status === 'occupied') {
+                  statusIndicatorClass = 'bg-blue-50 text-blue-600';
+                } else if (table.status === 'reserved') {
+                  statusIndicatorClass = 'bg-red-50 text-red-600';
+                } else {
+                  statusIndicatorClass = 'bg-gray-50 text-gray-600';
+                }
+
+                if (isSelected) {
+                  borderClass = 'border-[#D4AF37]';
+                  bgClass = 'bg-white shadow-xl ring-2 ring-[#D4AF37]/20';
+                }
 
                 return (
                   <motion.div
@@ -227,30 +277,40 @@ export default function ConsoleVenue() {
                     dragMomentum={false}
                     onDragStart={() => setDraggedTable(table.id)}
                     onDragEnd={(e, info) => handleTableDragEnd(table.id, info)}
-                    className={`absolute rounded-2xl border-2 flex flex-col items-center justify-center shadow-md cursor-pointer transition-colors duration-200 ${statusStyles}`}
+                    className={cn(
+                      "absolute rounded-2xl flex flex-col items-center justify-center shadow-sm cursor-pointer transition-all duration-200 border-2",
+                      bgClass,
+                      borderClass
+                    )}
                     style={{
                       left: table.x,
                       top: table.y,
-                      width: table.name.startsWith('B') ? 60 : (table.seats > 4 ? 160 : 100),
-                      height: table.name.startsWith('B') ? 60 : 100,
-                      borderRadius: table.name.startsWith('B') ? '50%' : '1rem',
+                      width: table.name.startsWith('B') ? 60 : (table.seats > 4 ? 160 : 120),
+                      height: table.name.startsWith('B') ? 60 : 80,
+                      borderRadius: table.name.startsWith('B') ? '50%' : '16px',
                       cursor: isEditing ? 'move' : 'pointer'
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
                       if (!isDraggingMap) setSelectedTableId(table.id);
                     }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.02, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)" }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    <span className={`font-serif font-bold ${isSelected ? 'text-white' : 'text-[#2C2C2C]'} ${table.name.startsWith('B') ? 'text-sm' : 'text-lg'}`}>
+                    {/* Table Name & Status Pill */}
+                    <div className={cn(
+                      "px-3 py-1 rounded-lg text-sm font-bold mb-1",
+                      statusIndicatorClass
+                    )}>
                       {table.name}
-                    </span>
+                    </div>
+                    
+                    {/* Decorative "Chairs" (Visual only) */}
                     {!table.name.startsWith('B') && (
-                      <div className="flex items-center gap-1 mt-1">
-                        <Users className={`w-3 h-3 ${isSelected ? 'text-white/80' : 'text-gray-400'}`} />
-                        <span className={`text-xs ${isSelected ? 'text-white/90' : 'text-gray-500'}`}>{table.seats}</span>
-                      </div>
+                      <div className="absolute -z-10 inset-x-4 -top-2 h-2 bg-gray-100 rounded-t-lg opacity-50" />
+                    )}
+                    {!table.name.startsWith('B') && (
+                      <div className="absolute -z-10 inset-x-4 -bottom-2 h-2 bg-gray-100 rounded-b-lg opacity-50" />
                     )}
                   </motion.div>
                 );
@@ -259,7 +319,7 @@ export default function ConsoleVenue() {
           </div>
 
           {/* Right Sidebar - Properties */}
-          <div className="w-80 bg-white border-l border-[#E5E0D6] flex flex-col">
+          <div className="w-80 bg-white border-l border-[#E5E0D6] flex flex-col shadow-xl z-30">
             <div className="p-6 border-b border-[#E5E0D6]">
               <h2 className="font-serif text-xl font-bold text-[#5C4033]">Properties</h2>
               <p className="text-xs text-[#8B4513] uppercase tracking-wider mt-1">
@@ -299,19 +359,28 @@ export default function ConsoleVenue() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Zone</Label>
+                  <Label>Floor</Label>
                   <Select 
                     disabled={!isEditing} 
-                    defaultValue="main"
+                    value={selectedTable.floor.toString()}
+                    onValueChange={(value) => {
+                      const updated = localTables.map(t => 
+                        t.id === selectedTable.id ? { ...t, floor: parseInt(value) } : t
+                      );
+                      setLocalTables(updated);
+                      // If we move it to another floor, we might want to switch view or deselect
+                      if (parseInt(value) !== currentFloor) {
+                        setSelectedTableId(null);
+                      }
+                    }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select zone" />
+                      <SelectValue placeholder="Select floor" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="main">Main Dining</SelectItem>
-                      <SelectItem value="terrace">Terrace</SelectItem>
-                      <SelectItem value="bar">Bar Area</SelectItem>
-                      <SelectItem value="private">Private Room</SelectItem>
+                      <SelectItem value="1">1st Floor</SelectItem>
+                      <SelectItem value="2">2nd Floor</SelectItem>
+                      <SelectItem value="3">3rd Floor</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -375,17 +444,39 @@ export default function ConsoleVenue() {
                 {isEditing && (
                   <div className="mt-8 w-full space-y-3">
                     <p className="text-xs font-medium uppercase tracking-wider text-[#5C4033] mb-2">Add New</p>
-                    <Button variant="outline" className="w-full justify-start border-dashed">
+                    <Button variant="outline" className="w-full justify-start border-dashed" onClick={() => {
+                      const newId = Math.random().toString(36).substr(2, 9);
+                      const newTable = {
+                        id: newId,
+                        name: `T${localTables.length + 1}`,
+                        seats: 4,
+                        x: 100,
+                        y: 100,
+                        floor: currentFloor,
+                        status: 'available' as const
+                      };
+                      setLocalTables([...localTables, newTable]);
+                      setSelectedTableId(newId);
+                    }}>
                       <LayoutTemplate className="w-4 h-4 mr-2" />
                       Add Rectangular Table
                     </Button>
-                    <Button variant="outline" className="w-full justify-start border-dashed">
+                    <Button variant="outline" className="w-full justify-start border-dashed" onClick={() => {
+                      const newId = Math.random().toString(36).substr(2, 9);
+                      const newTable = {
+                        id: newId,
+                        name: `B${localTables.length + 1}`,
+                        seats: 2,
+                        x: 100,
+                        y: 100,
+                        floor: currentFloor,
+                        status: 'available' as const
+                      };
+                      setLocalTables([...localTables, newTable]);
+                      setSelectedTableId(newId);
+                    }}>
                       <Armchair className="w-4 h-4 mr-2" />
                       Add Round Table
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start border-dashed">
-                      <Sofa className="w-4 h-4 mr-2" />
-                      Add Booth
                     </Button>
                   </div>
                 )}
