@@ -435,7 +435,7 @@ export const useStore = create<AppState>()(
       }))
     }),
     {
-      name: 'azay-storage',
+      name: 'azay-storage-v2', // Changed key to force reset
       migrate: (persistedState: any, version: number) => {
         if (version === 0) {
           // Migration to add floors if missing
@@ -447,7 +447,7 @@ export const useStore = create<AppState>()(
         }
         return persistedState;
       },
-      version: 0,
+      version: 1, // Bumped version
     }
   )
 );
