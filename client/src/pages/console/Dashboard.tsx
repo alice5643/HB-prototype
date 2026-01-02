@@ -1,6 +1,7 @@
 import React from 'react';
 import { ConsoleLayout } from '@/components/ConsoleLayout';
-import { Clock, Users, Bell, AlertCircle, ArrowUp, ArrowDown } from 'lucide-react';
+import { Clock, Users, Bell, AlertCircle, ArrowUp, ArrowDown, UtensilsCrossed } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const data = [
@@ -213,5 +214,4 @@ function MetricCard({ title, value, change, trend, subtext, icon: Icon }: any) {
   );
 }
 
-import { UtensilsCrossed } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
