@@ -363,7 +363,7 @@ export default function StaffDashboard() {
                           Tap another table to merge it into this one
                         </p>
                       )}
-                    {/* Removed extra closing div */}
+
 
                     {/* Requests & Orders List */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-[#FAFAFA]">
