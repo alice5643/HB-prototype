@@ -18,22 +18,31 @@ import {
   MoreHorizontal
 } from 'lucide-react';
 
-// Mock Tables Data with positions for the floor plan
-const TABLES = [
-  { id: '1', name: 'T1', seats: 2, x: 100, y: 100, status: 'occupied' },
-  { id: '2', name: 'T2', seats: 2, x: 100, y: 250, status: 'available' },
-  { id: '3', name: 'T3', seats: 4, x: 300, y: 100, status: 'occupied' },
-  { id: '4', name: 'T4', seats: 4, x: 300, y: 250, status: 'reserved' },
-  { id: '5', name: 'T5', seats: 6, x: 550, y: 180, status: 'occupied' },
-  { id: '6', name: 'T6', seats: 2, x: 800, y: 100, status: 'available' },
-  { id: '7', name: 'T7', seats: 4, x: 800, y: 250, status: 'occupied' },
-  { id: '8', name: 'T8', seats: 8, x: 550, y: 400, status: 'reserved' },
-  { id: '12', name: 'T12', seats: 4, x: 300, y: 400, status: 'occupied' }, // The user's table
-];
+// Timer Component
+const TableTimer = ({ startTime }: { startTime?: number }) => {
+  const [elapsed, setElapsed] = useState('00:00');
+
+  useEffect(() => {
+    if (!startTime) return;
+    
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const diff = now - startTime;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      setElapsed(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [startTime]);
+
+  return <span className="font-serif text-[#2C2C2C] font-medium">{elapsed}</span>;
+};
 
 export default function StaffDashboard() {
-  const { serviceRequests, updateServiceRequestStatus, orders, toggleOrderServed, sharingModel, partySize } = useStore();
+  const { serviceRequests, updateServiceRequestStatus, orders, toggleOrderServed, sharingModel, partySize, tables, updateTableStatus, joinTables } = useStore();
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
+  const [isJoining, setIsJoining] = useState(false); // State for join mode
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
   
   // Map Panning & Zooming State
@@ -71,7 +80,7 @@ export default function StaffDashboard() {
 
   // Filter requests for the selected table
   const tableRequests = selectedTableId 
-    ? serviceRequests.filter(r => r.tableNumber === TABLES.find(t => t.id === selectedTableId)?.name.replace('T', ''))
+    ? serviceRequests.filter(r => r.tableNumber === tables.find(t => t.id === selectedTableId)?.name.replace('T', ''))
     : [];
 
   const activeRequests = tableRequests.filter(r => r.status !== 'completed');
@@ -90,7 +99,7 @@ export default function StaffDashboard() {
 
   // Get requests for a specific table to show indicators
   const getTableRequests = (tableId: string) => {
-    const tableName = TABLES.find(t => t.id === tableId)?.name.replace('T', '');
+    const tableName = tables.find(t => t.id === tableId)?.name.replace('T', '');
     return serviceRequests.filter(r => r.tableNumber === tableName && r.status !== 'completed');
   };
 
@@ -147,48 +156,62 @@ export default function StaffDashboard() {
 
             {/* Draggable & Zoomable Map Container */}
             <motion.div 
-              className="absolute top-0 left-0 w-[1000px] h-[1000px] origin-top-left"
+              className="absolute top-0 left-0 w-[1500px] h-[1000px] origin-top-left"
               style={{ x: pan.x, y: pan.y, scale: scale }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
-              {TABLES.map((table) => {
+              {tables.map((table) => {
                 const requests = getTableRequests(table.id);
                 const hasRequests = requests.length > 0;
                 const isSelected = selectedTableId === table.id;
+                
+                // Determine style based on status
+                let statusStyles = 'bg-white border-[#E5E5E5] hover:border-[#D4AF37]/50';
+                if (table.status === 'occupied') statusStyles = 'bg-white border-[#2C2C2C] border-2';
+                if (table.status === 'reserved') statusStyles = 'bg-[#F5F2EA] border-dashed border-[#8B4513]/30';
+                if (table.status === 'cleaning') statusStyles = 'bg-gray-100 border-gray-200 opacity-70';
+                
+                if (hasRequests) statusStyles = 'bg-white border-[#D4AF37] animate-pulse shadow-[0_0_15px_rgba(212,175,55,0.5)]';
+                if (isSelected) statusStyles = 'bg-[#D4AF37] border-[#D4AF37] text-white scale-110 z-10 shadow-xl';
 
                 return (
                   <motion.div
                     key={table.id}
-                    className={`absolute rounded-2xl border-2 flex flex-col items-center justify-center shadow-md cursor-pointer transition-all duration-300
-                      ${isSelected 
-                        ? 'bg-[#D4AF37] border-[#D4AF37] text-white scale-110 z-10' 
-                        : hasRequests
-                          ? 'bg-white border-[#D4AF37] animate-pulse shadow-[0_0_15px_rgba(212,175,55,0.5)]'
-                          : 'bg-white border-[#E5E5E5] hover:border-[#D4AF37]/50'
-                      }
-                    `}
+                    className={`absolute rounded-2xl border-2 flex flex-col items-center justify-center shadow-md cursor-pointer transition-all duration-300 ${statusStyles}`}
                     style={{
                       left: table.x,
                       top: table.y,
-                      width: table.seats > 4 ? 160 : 100,
-                      height: 100,
+                      width: table.name.startsWith('B') ? 60 : (table.seats > 4 ? 160 : 100),
+                      height: table.name.startsWith('B') ? 60 : 100,
+                      borderRadius: table.name.startsWith('B') ? '50%' : '1rem'
                     }}
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent drag start
-                      setSelectedTableId(table.id);
+                      if (isJoining && selectedTableId && selectedTableId !== table.id) {
+                        if (confirm(`Join ${tables.find(t => t.id === selectedTableId)?.name} with ${table.name}?`)) {
+                          joinTables(selectedTableId, table.id);
+                          setSelectedTableId(table.id);
+                          setIsJoining(false);
+                        }
+                      } else {
+                        setSelectedTableId(table.id);
+                        setIsJoining(false); // Cancel join if clicking same table or just selecting
+                      }
                     }}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <span className={`font-serif text-lg font-bold ${isSelected ? 'text-white' : 'text-[#2C2C2C]'}`}>
+                    <span className={`font-serif font-bold ${isSelected ? 'text-white' : 'text-[#2C2C2C]'} ${table.name.startsWith('B') ? 'text-sm' : 'text-lg'}`}>
                       {table.name}
                     </span>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Users className={`w-3 h-3 ${isSelected ? 'text-white/80' : 'text-gray-400'}`} />
-                      <span className={`text-xs ${isSelected ? 'text-white/80' : 'text-gray-500'}`}>
-                        {table.seats}
-                      </span>
-                    </div>
+                    {!table.name.startsWith('B') && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <Users className={`w-3 h-3 ${isSelected ? 'text-white/80' : 'text-gray-400'}`} />
+                        <span className={`text-xs ${isSelected ? 'text-white/80' : 'text-gray-500'}`}>
+                          {table.seats}
+                        </span>
+                      </div>
+                    )}
 
                     {/* Request Badge */}
                     {hasRequests && (
@@ -240,8 +263,8 @@ export default function StaffDashboard() {
                     <div className="p-6 border-b border-[#F5F2EA] bg-[#FFFBF0]">
                       <div className="flex justify-between items-start mb-4">
                         <div>
-                          <h2 className="font-serif text-2xl text-[#2C2C2C]">Table {TABLES.find(t => t.id === selectedTableId)?.name}</h2>
-                          <p className="text-[#8B4513] text-sm">Main Dining Room • {TABLES.find(t => t.id === selectedTableId)?.seats} Guests</p>
+                          <h2 className="font-serif text-2xl text-[#2C2C2C]">Table {tables.find(t => t.id === selectedTableId)?.name}</h2>
+                          <p className="text-[#8B4513] text-sm">Main Dining Room • {tables.find(t => t.id === selectedTableId)?.seats} Guests</p>
                         </div>
                         <button 
                           onClick={() => setSelectedTableId(null)}
@@ -251,16 +274,43 @@ export default function StaffDashboard() {
                         </button>
                       </div>
                       
-                      <div className="flex gap-2">
-                        <div className="flex-1 bg-white border border-[#D4AF37]/20 rounded-lg p-2 text-center">
-                          <span className="block text-xs text-[#8B4513] uppercase tracking-wider mb-1">Course</span>
-                          <span className="font-serif text-[#2C2C2C] font-medium">Main</span>
+                      <div className="flex gap-2 mb-3">
+                        <div className="flex-1 bg-white border border-[#D4AF37]/20 rounded-lg p-2">
+                          <span className="block text-xs text-[#8B4513] uppercase tracking-wider mb-1 text-center">Status</span>
+                          <select 
+                            className="w-full text-center font-serif text-[#2C2C2C] font-medium bg-transparent border-none focus:ring-0 p-0 text-sm cursor-pointer"
+                            value={tables.find(t => t.id === selectedTableId)?.status}
+                            onChange={(e) => selectedTableId && updateTableStatus(selectedTableId, e.target.value as any)}
+                          >
+                            <option value="available">Available</option>
+                            <option value="occupied">Occupied</option>
+                            <option value="reserved">Reserved</option>
+                            <option value="cleaning">Cleaning</option>
+                          </select>
                         </div>
                         <div className="flex-1 bg-white border border-[#D4AF37]/20 rounded-lg p-2 text-center">
                           <span className="block text-xs text-[#8B4513] uppercase tracking-wider mb-1">Time</span>
-                          <span className="font-serif text-[#2C2C2C] font-medium">45m</span>
+                          <TableTimer startTime={tables.find(t => t.id === selectedTableId)?.seatedTime} />
                         </div>
                       </div>
+
+                      <button 
+                        className={`w-full py-2 border rounded-lg text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2
+                          ${isJoining 
+                            ? 'bg-[#D4AF37] text-white border-[#D4AF37] animate-pulse' 
+                            : 'bg-white border-[#D4AF37]/30 text-[#8B4513] hover:bg-[#F5F2EA]'
+                          }
+                        `}
+                        onClick={() => setIsJoining(!isJoining)}
+                      >
+                        <Users className="w-4 h-4" />
+                        {isJoining ? 'Select Target Table...' : 'Join Table'}
+                      </button>
+                      {isJoining && (
+                        <p className="text-[10px] text-center text-[#D4AF37] mt-1 font-medium">
+                          Tap another table to merge
+                        </p>
+                      )}
                     </div>
 
                     {/* Requests & Orders List */}
