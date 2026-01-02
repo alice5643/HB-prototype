@@ -83,8 +83,10 @@ export function ConsoleLayout({ children }: ConsoleLayoutProps) {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto pt-16 lg:pt-0 w-full">
-        {children}
+      <div className="flex-1 overflow-hidden pt-16 lg:pt-0 w-full flex flex-col">
+        <div className="flex-1 overflow-auto p-6">
+          {children}
+        </div>
       </div>
     </div>
   );

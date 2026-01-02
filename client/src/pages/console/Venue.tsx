@@ -14,6 +14,8 @@ import {
 import { Plus, Minus, ZoomIn, ZoomOut, Move, Grid, Trash2, Edit2, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+import { ConsoleLayout } from '@/components/ConsoleLayout';
+
 export default function ConsoleVenue() {
   const { tables, floors, addFloor, updateFloorName, addTable, updateTable, deleteTable } = useStore();
   const [activeFloorId, setActiveFloorId] = useState<number>(1);
@@ -41,7 +43,7 @@ export default function ConsoleVenue() {
     }
   }, [floors, activeFloorId]);
 
-  if (!floors) return null;
+  if (!floors) return <ConsoleLayout><div>Loading...</div></ConsoleLayout>;
 
   const handleWheel = (e: React.WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
@@ -168,7 +170,8 @@ export default function ConsoleVenue() {
   const selectedTable = tables.find(t => t.id === selectedTableId);
 
   return (
-    <div className="h-[calc(100vh-2rem)] flex flex-col gap-6">
+    <ConsoleLayout>
+      <div className="h-full flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center justify-between shrink-0">
         <div>
@@ -475,6 +478,7 @@ export default function ConsoleVenue() {
           </Card>
         </div>
       </div>
-    </div>
+      </div>
+    </ConsoleLayout>
   );
 }
