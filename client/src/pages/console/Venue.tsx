@@ -252,12 +252,10 @@ export default function ConsoleVenue() {
               {currentFloorTables.map((table) => {
                 const isSelected = selectedTableId === table.id;
                 
-                // Determine style based on status
+                // Uniform style for layout editing (like T2)
                 let statusStyles = 'bg-white border-[#E5E5E5] hover:border-[#D4AF37]/50';
-                if (table.status === 'occupied') statusStyles = 'bg-white border-[#2C2C2C] border-2';
-                if (table.status === 'reserved') statusStyles = 'bg-[#F5F2EA] border-dashed border-[#8B4513]/30';
-                if (table.status === 'cleaning') statusStyles = 'bg-gray-100 border-gray-200 opacity-70';
                 
+                // Only highlight selection, ignore other statuses for layout view
                 if (isSelected) statusStyles = 'bg-[#D4AF37] border-[#D4AF37] text-white scale-110 z-10 shadow-xl';
 
                 return (
@@ -275,7 +273,12 @@ export default function ConsoleVenue() {
                     dragMomentum={false}
                     onDragEnd={(_, info) => {
                       if (isEditMode) {
-                        updateTable({ ...table, x: table.x + info.offset.x, y: table.y + info.offset.y });
+                        // Adjust drag offset by scale to ensure 1:1 movement with cursor
+                        updateTable({ 
+                          ...table, 
+                          x: table.x + (info.offset.x / scale), 
+                          y: table.y + (info.offset.y / scale) 
+                        });
                       }
                     }}
                     onClick={(e) => {
@@ -338,23 +341,15 @@ export default function ConsoleVenue() {
               </Button>
             </div>
 
-            {/* Legend */}
+            {/* Legend - Simplified for Layout Mode */}
             <div className="absolute bottom-8 left-8 bg-white/90 backdrop-blur rounded-full shadow-lg border border-[#D4AF37]/20 px-6 py-3 flex items-center gap-6 z-10">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-white border border-[#E5E5E5]" />
-                <span className="text-sm text-[#5C4033]">Available</span>
+                <span className="text-sm text-[#5C4033]">Table</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-white border-2 border-[#2C2C2C]" />
-                <span className="text-sm text-[#5C4033]">Occupied</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[#F5F2EA] border-dashed border-[#8B4513]/30" />
-                <span className="text-sm text-[#5C4033]">Reserved</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-white border border-[#D4AF37] shadow-[0_0_5px_rgba(212,175,55,0.5)]" />
-                <span className="text-sm text-[#5C4033]">Request</span>
+                <div className="w-3 h-3 rounded-full bg-[#D4AF37]" />
+                <span className="text-sm text-[#5C4033]">Selected</span>
               </div>
             </div>
           </div>
