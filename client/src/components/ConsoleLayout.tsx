@@ -21,7 +21,7 @@ export function ConsoleLayout({ children }: ConsoleLayoutProps) {
   ];
 
   return (
-    <div className="flex h-screen bg-[#FDFBF7] overflow-hidden">
+    <div className="flex h-screen bg-[#FDFBF7] overflow-hidden console-layout-wrapper">
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#FDFBF7] border-b border-[#E5E0D6] flex items-center justify-between px-4 z-50">
         <div className="flex items-center gap-2">
