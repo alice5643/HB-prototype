@@ -16,13 +16,8 @@ import {
   Search,
   Filter,
   MoreHorizontal,
-  Bell,
-  ZoomIn,
-  ZoomOut,
-  Grid
+  Bell
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 // Timer Component
 const TableTimer = ({ startTime }: { startTime?: number }) => {
@@ -46,29 +41,17 @@ const TableTimer = ({ startTime }: { startTime?: number }) => {
 };
 
 export default function StaffDashboard() {
-  const { serviceRequests, updateServiceRequestStatus, orders, toggleOrderServed, sharingModel, partySize, tables, floors, updateTableStatus, joinTables, splitTable, resetTables, simulateRequest } = useStore();
+  const { serviceRequests, updateServiceRequestStatus, orders, toggleOrderServed, sharingModel, partySize, tables, updateTableStatus, joinTables, splitTable, resetTables, simulateRequest } = useStore();
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false); // State for join mode
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
-  const [activeFloorId, setActiveFloorId] = useState<number>(1);
   
   // Map Panning & Zooming State
   const mapRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [scale, setScale] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-
-  // Initialize active floor if needed
-  useEffect(() => {
-    if (floors && floors.length > 0 && !floors.find(f => f.id === activeFloorId)) {
-      setActiveFloorId(floors[0].id);
-    }
-  }, [floors, activeFloorId]);
-
-  // Filter tables for current floor
-  const currentFloorTables = tables ? tables.filter(t => t.floor === activeFloorId && t.status !== 'hidden') : [];
 
   // Handle Drag-to-Pan
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -94,36 +77,6 @@ export default function StaffDashboard() {
     const scaleSensitivity = 0.001;
     const newScale = Math.min(Math.max(0.5, scale - e.deltaY * scaleSensitivity), 3);
     setScale(newScale);
-  };
-
-  const handleScaleToFit = () => {
-    if (currentFloorTables.length === 0) {
-      setScale(1);
-      setPan({ x: 0, y: 0 });
-      return;
-    }
-
-    const minX = Math.min(...currentFloorTables.map(t => t.x));
-    const maxX = Math.max(...currentFloorTables.map(t => t.x + (t.seats > 4 ? 120 : 80)));
-    const minY = Math.min(...currentFloorTables.map(t => t.y));
-    const maxY = Math.max(...currentFloorTables.map(t => t.y + 60));
-
-    const padding = 100;
-    const width = maxX - minX + padding * 2;
-    const height = maxY - minY + padding * 2;
-
-    const containerWidth = containerRef.current?.clientWidth || 1000;
-    const containerHeight = containerRef.current?.clientHeight || 600;
-
-    const scaleX = containerWidth / width;
-    const scaleY = containerHeight / height;
-    const newScale = Math.min(scaleX, scaleY, 1); // Don't zoom in past 100%
-
-    setScale(newScale);
-    setPan({
-      x: (containerWidth - width * newScale) / 2 - minX * newScale + padding * newScale,
-      y: (containerHeight - height * newScale) / 2 - minY * newScale + padding * newScale
-    });
   };
 
   // Filter requests for the selected table
@@ -171,24 +124,6 @@ export default function StaffDashboard() {
           </div>
           
           <div className="flex items-center gap-4">
-            {/* Floor Toggles */}
-            <div className="flex items-center bg-white rounded-lg p-1 shadow-sm border border-[#D4AF37]/20">
-              {floors && floors.map(floor => (
-                <Button
-                  key={floor.id}
-                  variant={activeFloorId === floor.id ? "secondary" : "ghost"}
-                  size="sm"
-                  onClick={() => setActiveFloorId(floor.id)}
-                  className={cn(
-                    "relative px-4 transition-all",
-                    activeFloorId === floor.id && "bg-[#D4AF37]/10 text-[#8B4513] font-medium shadow-sm"
-                  )}
-                >
-                  {floor.name}
-                </Button>
-              ))}
-            </div>
-
             <div className="hidden md:flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-[#D4AF37]/20 shadow-sm">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
               <span className="text-xs font-medium text-[#5C4033]">Live Service</span>
@@ -222,7 +157,6 @@ export default function StaffDashboard() {
           
           {/* Left: Interactive Floor Plan (Pannable & Zoomable) */}
           <div 
-            ref={containerRef}
             className="flex-1 bg-[#F0EAD6] relative overflow-hidden cursor-grab active:cursor-grabbing"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
@@ -235,6 +169,7 @@ export default function StaffDashboard() {
                 setSelectedTableId(null);
               }
             }}
+            ref={mapRef}
           >
             {/* Grid Pattern Background */}
             <div 
@@ -248,37 +183,46 @@ export default function StaffDashboard() {
 
             {/* Draggable & Zoomable Map Container */}
             <motion.div 
-              ref={mapRef}
-              className="absolute top-0 left-0 origin-top-left"
+              className="absolute top-0 left-0 w-[1500px] h-[1000px] origin-top-left"
               style={{ x: pan.x, y: pan.y, scale: scale }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
-              {currentFloorTables.map((table) => {
+              {tables.filter(t => t.status !== 'hidden').map((table) => {
                 const requests = getTableRequests(table.id);
                 const hasRequests = requests.length > 0;
                 const isSelected = selectedTableId === table.id;
                 
+                // Determine style based on status
+                let statusStyles = 'bg-white border-[#E5E5E5] hover:border-[#D4AF37]/50';
+                if (table.status === 'occupied') statusStyles = 'bg-white border-[#2C2C2C] border-2';
+                if (table.status === 'reserved') statusStyles = 'bg-[#F5F2EA] border-dashed border-[#8B4513]/30';
+                if (table.status === 'cleaning') statusStyles = 'bg-gray-100 border-gray-200 opacity-70';
+                
+                if (hasRequests) statusStyles = 'bg-white border-[#D4AF37] animate-pulse shadow-[0_0_15px_rgba(212,175,55,0.5)]';
+                if (isSelected) statusStyles = 'bg-[#D4AF37] border-[#D4AF37] text-white scale-110 z-10 shadow-xl';
+
                 return (
                   <motion.div
                     key={table.id}
-                    className={cn(
-                      "absolute flex items-center justify-center transition-colors duration-200 cursor-pointer",
-                      isSelected ? "ring-2 ring-[#D4AF37] ring-offset-2 z-10" : "hover:ring-1 hover:ring-[#D4AF37]/50"
-                    )}
+                    className={`absolute rounded-2xl border-2 flex flex-col items-center justify-center shadow-md cursor-pointer transition-all duration-300 ${statusStyles}`}
                     style={{
                       left: table.x,
                       top: table.y,
-                      width: table.seats > 4 ? 120 : 80,
-                      height: 60,
+                      width: table.name.startsWith('B') ? 60 : (table.seats > 4 ? 160 : 100),
+                      height: table.name.startsWith('B') ? 60 : 100,
+                      borderRadius: table.name.startsWith('B') ? '50%' : '1rem'
                     }}
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent drag start
                       if (isJoining && selectedTableId && selectedTableId !== table.id) {
                         // Join logic: Join selected table INTO the clicked table
+                        // We keep the clicked table as the new "master" (target)
                         joinTables(selectedTableId, table.id);
                         setSelectedTableId(table.id); // Select the new merged table
+                        // Keep isJoining true to allow chaining more tables
                       } else {
                         setSelectedTableId(table.id);
+                        // Only cancel join mode if we click the same table again to toggle off, or if we want to stop.
                         if (selectedTableId === table.id && isJoining) {
                            setIsJoining(false);
                         }
@@ -287,318 +231,351 @@ export default function StaffDashboard() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    {/* Table Shape */}
-                    <div className={cn(
-                      "w-full h-full rounded-lg border shadow-sm flex items-center justify-center relative",
-                      table.status === 'occupied' ? "bg-white border-[#2C2C2C] border-2" :
-                      table.status === 'reserved' ? "bg-[#F5F2EA] border-dashed border-[#8B4513]/30" :
-                      table.status === 'cleaning' ? "bg-gray-100 border-gray-200 opacity-70" :
-                      "bg-white border-[#E5E5E5]",
-                      hasRequests && "animate-pulse shadow-[0_0_15px_rgba(212,175,55,0.5)] border-[#D4AF37]",
-                      isSelected && "bg-[#FFFBF0] border-[#D4AF37]"
-                    )}>
-                      {/* Chairs */}
-                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-[#D4AF37]/20 rounded-full" />
-                      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-[#D4AF37]/20 rounded-full" />
-                      {table.seats > 2 && (
-                        <>
-                          <div className="absolute top-1/2 -left-2 -translate-y-1/2 w-1 h-1/2 bg-[#D4AF37]/20 rounded-full" />
-                          <div className="absolute top-1/2 -right-2 -translate-y-1/2 w-1 h-1/2 bg-[#D4AF37]/20 rounded-full" />
-                        </>
-                      )}
-
-                      <div className="flex flex-col items-center">
-                        <span className={cn(
-                          "font-serif font-bold",
-                          table.status === 'occupied' ? "text-[#2C2C2C]" :
-                          table.status === 'reserved' ? "text-[#8B4513]" :
-                          "text-[#5C4033]",
-                          table.name.startsWith('B') ? 'text-sm' : 'text-lg'
-                        )}>
-                          {table.name}
+                    <span className={`font-serif font-bold ${isSelected ? 'text-white' : 'text-[#2C2C2C]'} ${table.name.startsWith('B') ? 'text-sm' : 'text-lg'}`}>
+                      {table.name}
+                    </span>
+                    {!table.name.startsWith('B') && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <Users className={`w-3 h-3 ${isSelected ? 'text-white/80' : 'text-gray-400'}`} />
+                        <span className={`text-xs ${isSelected ? 'text-white/80' : 'text-gray-500'}`}>
+                          {table.seats}
                         </span>
-                        {table.status === 'occupied' && table.seatedTime && (
-                          <div className="text-[10px] font-medium text-[#8B4513] mt-0.5">
-                            <TableTimer startTime={table.seatedTime} />
-                          </div>
-                        )}
                       </div>
-                    </div>
+                    )}
+
+                    {/* Request Badge */}
+                    {hasRequests && (
+                      <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm border border-white">
+                        {requests.length}
+                      </div>
+                    )}
                   </motion.div>
                 );
               })}
             </motion.div>
 
-            {/* Map Controls */}
-            <div className="absolute bottom-4 right-4 flex flex-col gap-2">
-              <div className="bg-white rounded-lg shadow-lg border border-[#D4AF37]/20 p-1 flex flex-col gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 hover:bg-[#F5F2EA] text-[#8B4513]"
-                  onClick={() => setScale(s => Math.min(s + 0.1, 3))}
-                >
-                  <ZoomIn className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 hover:bg-[#F5F2EA] text-[#8B4513]"
-                  onClick={() => setScale(s => Math.max(s - 0.1, 0.5))}
-                >
-                  <ZoomOut className="w-4 h-4" />
-                </Button>
+            {/* Floor Plan Legend */}
+            <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm p-3 rounded-xl border border-[#D4AF37]/20 shadow-sm pointer-events-none">
+              <h3 className="font-serif text-[#2C2C2C] text-sm font-bold mb-2">Floor Plan</h3>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-lg bg-white border border-[#E5E5E5]" />
+                  <span className="text-xs text-[#5C4033]">Available</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-lg bg-white border-2 border-[#2C2C2C]" />
+                  <span className="text-xs text-[#5C4033]">Occupied</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-lg bg-[#F5F2EA] border border-dashed border-[#8B4513]/30" />
+                  <span className="text-xs text-[#5C4033]">Reserved</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-lg bg-gray-100 border border-gray-200" />
+                  <span className="text-xs text-[#5C4033]">Cleaning</span>
+                </div>
+                <div className="flex items-center gap-2 mt-1 pt-1 border-t border-gray-100">
+                  <div className="w-3 h-3 rounded-lg bg-white border border-red-500" />
+                  <span className="text-xs text-[#5C4033]">Request</span>
+                </div>
               </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                className="shadow-lg bg-white hover:bg-[#F5F2EA] text-[#8B4513] border border-[#D4AF37]/20"
-                onClick={handleScaleToFit}
-              >
-                <Grid className="w-4 h-4 mr-2" />
-                Scale to Fit
-              </Button>
             </div>
           </div>
-
-          {/* Right: Detail Panel (Slide Over) */}
+          {/* Right: Action Panel (Static on Desktop, Slide-over on Mobile) */}
           <AnimatePresence mode="wait">
-            {selectedTable ? (
+            {(selectedTableId || window.innerWidth >= 768) && (
               <motion.div 
-                initial={{ x: '100%' }}
+                className={`
+                  absolute md:relative inset-y-0 right-0 w-full md:w-[350px] bg-white border-l border-[#D4AF37]/20 shadow-xl md:shadow-none z-20 flex flex-col
+                  ${!selectedTableId && window.innerWidth < 768 ? 'translate-x-full' : 'translate-x-0'}
+                `}
+                initial={{ x: "100%" }}
                 animate={{ x: 0 }}
-                exit={{ x: '100%' }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="w-[400px] bg-white border-l border-[#D4AF37]/20 shadow-2xl z-10 flex flex-col h-full"
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
               >
-                {/* Table Header */}
-                <div className="p-6 border-b border-[#F5F2EA] bg-[#FFFBF0]">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h2 className="font-serif text-2xl text-[#2C2C2C]">Table {selectedTable.name}</h2>
-                      <div className="flex items-center gap-2 mt-1 text-[#8B4513] text-sm">
-                        <Users className="w-4 h-4" />
-                        <span>{selectedTable.seats} Seats</span>
-                        <span className="text-[#D4AF37]">•</span>
-                        <span>{selectedTable.status.charAt(0).toUpperCase() + selectedTable.status.slice(1)}</span>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => setSelectedTableId(null)}
-                      className="p-2 hover:bg-[#D4AF37]/10 rounded-full text-[#8B4513] transition-colors"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  {/* Quick Actions */}
-                  <div className="grid grid-cols-2 gap-3">
-                    {selectedTable.status === 'available' && (
-                      <button 
-                        onClick={() => updateTableStatus(selectedTable.id, 'occupied')}
-                        className="col-span-2 py-3 bg-[#2C2C2C] text-[#FFFBF0] rounded-xl font-medium hover:bg-[#1a1a1a] transition-colors flex items-center justify-center gap-2"
-                      >
-                        <Users className="w-4 h-4" />
-                        Seat Guests
-                      </button>
-                    )}
-                    {selectedTable.status === 'occupied' && (
-                      <>
-                        <button 
-                          onClick={() => updateTableStatus(selectedTable.id, 'cleaning')}
-                          className="py-3 bg-[#F5F2EA] text-[#8B4513] rounded-xl font-medium hover:bg-[#EBE5D5] transition-colors border border-[#D4AF37]/20"
-                        >
-                          Clear Table
-                        </button>
-                        <button 
-                          onClick={() => setIsJoining(!isJoining)}
-                          className={`py-3 rounded-xl font-medium transition-colors border border-[#D4AF37]/20 flex items-center justify-center gap-2 ${isJoining ? 'bg-[#D4AF37] text-white' : 'bg-[#F5F2EA] text-[#8B4513] hover:bg-[#EBE5D5]'}`}
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                          {isJoining ? 'Select Table to Join' : 'Join Table'}
-                        </button>
-                      </>
-                    )}
-                    {selectedTable.status === 'cleaning' && (
-                      <button 
-                        onClick={() => updateTableStatus(selectedTable.id, 'available')}
-                        className="col-span-2 py-3 bg-[#4CAF50] text-white rounded-xl font-medium hover:bg-[#45a049] transition-colors flex items-center justify-center gap-2"
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                        Mark Ready
-                      </button>
-                    )}
-                    {selectedTable.mergedIds && selectedTable.mergedIds.length > 0 && (
-                       <button 
-                          onClick={() => splitTable(selectedTable.id)}
-                          className="col-span-2 py-3 bg-[#F5F2EA] text-[#8B4513] rounded-xl font-medium hover:bg-[#EBE5D5] transition-colors border border-[#D4AF37]/20"
-                        >
-                          Split Tables
-                        </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Content Tabs */}
-                <div className="flex-1 overflow-y-auto">
-                  {selectedTable.status === 'occupied' ? (
-                    <div className="p-6 space-y-8">
-                      {/* Service Requests */}
-                      <section>
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="font-serif text-lg text-[#2C2C2C] flex items-center gap-2">
-                            <Bell className="w-4 h-4 text-[#D4AF37]" />
-                            Service Requests
-                          </h3>
-                          {activeRequests.length > 0 && (
-                            <span className="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded-full">
-                              {activeRequests.length} New
-                            </span>
-                          )}
+                {selectedTableId ? (
+                  <>
+                    {/* Header */}
+                    <div className="p-4 border-b border-[#F5F2EA] bg-[#FFFBF0] flex justify-between items-start">
+                        <div>
+                          <h2 className="font-serif text-2xl text-[#2C2C2C]">Table {tables.find(t => t.id === selectedTableId)?.name}</h2>
+                          <p className="text-[#8B4513] text-sm">Main Dining Room • {tables.find(t => t.id === selectedTableId)?.seats} Guests</p>
                         </div>
-                        
+                        <button 
+                          onClick={() => setSelectedTableId(null)}
+                          className="md:hidden p-2 hover:bg-black/5 rounded-full"
+                        >
+                          <X className="w-5 h-5 text-[#5C4033]" />
+                        </button>
+                      </div>
+                      
+                      <div className="flex gap-2 mb-3">
+                        <div className="flex-1 bg-white border border-[#D4AF37]/20 rounded-lg p-2">
+                          <span className="block text-xs text-[#8B4513] uppercase tracking-wider mb-1 text-center">Status</span>
+                          <select 
+                            className="w-full text-center font-serif text-[#2C2C2C] font-medium bg-transparent border-none focus:ring-0 p-0 text-sm cursor-pointer"
+                            value={tables.find(t => t.id === selectedTableId)?.status}
+                            onChange={(e) => selectedTableId && updateTableStatus(selectedTableId, e.target.value as any)}
+                          >
+                            <option value="available">Available</option>
+                            <option value="occupied">Occupied</option>
+                            <option value="reserved">Reserved</option>
+                            <option value="cleaning">Cleaning</option>
+                          </select>
+                        </div>
+                        <div className="flex-1 bg-white border border-[#D4AF37]/20 rounded-lg p-2 text-center">
+                          <span className="block text-xs text-[#8B4513] uppercase tracking-wider mb-1">Time</span>
+                          <TableTimer startTime={tables.find(t => t.id === selectedTableId)?.seatedTime} />
+                        </div>
+                      </div>
+
+                      <button 
+                        className={`w-full py-2 border rounded-lg text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2
+                          ${isJoining 
+                            ? 'bg-[#D4AF37] text-white border-[#D4AF37] animate-pulse' 
+                            : 'bg-white border-[#D4AF37]/30 text-[#8B4513] hover:bg-[#F5F2EA]'
+                          }
+                        `}
+                        onClick={() => setIsJoining(!isJoining)}
+                      >
+                        <Users className="w-4 h-4" />
+                        {isJoining ? 'Tap tables to merge...' : 'Join Table'}
+                      </button>
+                      
+                      {/* Split Table Button (Only if merged) */}
+                      {selectedTable?.mergedIds && selectedTable.mergedIds.length > 0 && (
+                        <button 
+                          className="w-full mt-2 py-2 border border-red-200 bg-red-50 text-red-600 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-red-100 transition-colors"
+                          onClick={() => {
+                            if (confirm('Split this table back to original arrangement?')) {
+                              splitTable(selectedTable.id);
+                              setIsJoining(false);
+                            }
+                          }}
+                        >
+                          Split Table
+                        </button>
+                      )}
+
+                      {isJoining && (
+                        <p className="text-[10px] text-center text-[#D4AF37] mt-1 font-medium">
+                          Tap another table to merge it into this one
+                        </p>
+                      )}
+                    {/* Removed extra closing div */}
+
+                    {/* Requests & Orders List */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-[#FAFAFA]">
+                      
+                      {/* Active Requests Section */}
+                      {activeRequests.length > 0 && (
                         <div className="space-y-3">
-                          {activeRequests.length === 0 && (
-                            <div className="text-center py-8 bg-[#F9F9F9] rounded-xl border border-dashed border-gray-200">
-                              <p className="text-gray-400 text-sm">No active requests</p>
-                            </div>
-                          )}
-                          {activeRequests.map(req => (
+                          <h3 className="text-xs font-bold text-[#8B4513] uppercase tracking-wider ml-1">Active Requests</h3>
+                          {activeRequests.map((req) => (
                             <motion.div 
                               key={req.id}
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
-                              className="bg-white border border-red-100 shadow-sm rounded-xl p-4 flex items-start gap-3"
+                              className="bg-white p-4 rounded-xl border-l-4 border-red-500 shadow-sm"
                             >
-                              <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-500 shrink-0">
-                                <AlertCircle className="w-4 h-4" />
+                              <div className="flex justify-between items-start mb-3">
+                                <div className="flex items-center gap-2">
+                                  {/* @ts-ignore - Types are compatible but TS is strict about string literals */}
+                                  {req.type === 'water' && <GlassWater className="w-4 h-4 text-[#5C4033]" />}
+                                  {req.type === 'cutlery' && <Utensils className="w-4 h-4 text-[#5C4033]" />}
+                                  {/* @ts-ignore - Types are compatible but TS is strict about string literals */}
+                                  {req.type === 'service' && <ChefHat className="w-4 h-4 text-[#5C4033]" />}
+                                  <span className="font-medium text-[#2C2C2C]">{req.details || req.type}</span>
+                                </div>
+                                <span className="text-xs text-gray-400 font-mono">
+                                  {format(new Date(req.timestamp), 'HH:mm')}
+                                </span>
                               </div>
-                              <div className="flex-1">
-                                <p className="font-medium text-[#2C2C2C] capitalize">{req.type}</p>
-                                {req.details && <p className="text-sm text-gray-500 mt-1">{req.details}</p>}
-                                <p className="text-xs text-gray-400 mt-2">{format(req.timestamp, 'h:mm a')}</p>
+                              
+                              <div className="flex gap-2">
+                                {req.status === 'pending' && (
+                                  <button 
+                                    onClick={() => updateServiceRequestStatus(req.id, 'acknowledged')}
+                                    className="flex-1 bg-[#FFFBF0] text-[#8B4513] border border-[#D4AF37]/30 py-2 rounded-lg text-sm font-medium hover:bg-[#F5F2EA] transition-colors"
+                                  >
+                                    Acknowledge
+                                  </button>
+                                )}
+                                <button 
+                                  onClick={() => updateServiceRequestStatus(req.id, 'completed')}
+                                  className="flex-1 bg-[#2C2C2C] text-[#F5F2EA] py-2 rounded-lg text-sm font-medium hover:bg-black transition-colors"
+                                >
+                                  Complete
+                                </button>
                               </div>
-                              <button 
-                                onClick={() => updateServiceRequestStatus(req.id, 'completed')}
-                                className="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-medium rounded-lg hover:bg-red-100 transition-colors"
-                              >
-                                Resolve
-                              </button>
                             </motion.div>
                           ))}
                         </div>
-                      </section>
+                      )}
 
-                      {/* Active Orders */}
-                      <section>
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="font-serif text-lg text-[#2C2C2C] flex items-center gap-2">
-                            <Utensils className="w-4 h-4 text-[#D4AF37]" />
-                            Current Orders
-                          </h3>
-                          <span className="text-[#8B4513] font-medium">${billTotal.toFixed(2)}</span>
-                        </div>
-
+                      {/* Live Orders Section */}
+                      {selectedTableId === '12' && (activeOrders.length > 0 || servedOrders.length > 0) && (
                         <div className="space-y-3">
-                          {activeOrders.length === 0 && (
-                            <div className="text-center py-8 bg-[#F9F9F9] rounded-xl border border-dashed border-gray-200">
-                              <p className="text-gray-400 text-sm">No active orders</p>
-                            </div>
-                          )}
+                          <h3 className="text-xs font-bold text-[#8B4513] uppercase tracking-wider flex items-center gap-2">
+                            <Utensils className="w-3 h-3" />
+                            Live Orders
+                          </h3>
+                          
+                          {/* Active Orders */}
                           {activeOrders.map(order => (
-                            <div key={order.id} className="bg-white border border-[#F5F2EA] rounded-xl p-4 flex gap-4">
-                              <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden shrink-0">
-                                <img src={order.image} alt={order.name} className="w-full h-full object-cover" />
+                            <div key={`${order.id}-${order.selectedVariationId}`} className="bg-white rounded-xl p-3 border border-[#E5E5E5] shadow-sm flex justify-between items-center">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-serif font-medium text-[#2C2C2C]">{order.name}</span>
+                                  <span className="text-xs bg-[#F5F2EA] text-[#8B4513] px-1.5 py-0.5 rounded">x{order.quantity}</span>
+                                </div>
+                                {order.selectedVariationName && (
+                                  <p className="text-xs text-gray-500">{order.selectedVariationName}</p>
+                                )}
                               </div>
-                              <div className="flex-1">
-                                <div className="flex justify-between items-start">
-                                  <div>
-                                    <p className="font-medium text-[#2C2C2C]">{order.name}</p>
-                                    <p className="text-sm text-gray-500">{order.quantity}x • ${order.price}</p>
-                                  </div>
+                              <button 
+                                onClick={() => toggleOrderServed(order.id, order.selectedVariationId)}
+                                className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:bg-green-50 hover:border-green-200 hover:text-green-600 transition-colors"
+                              >
+                                <CheckCircle2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+
+                          {/* Served Orders (Collapsed/Dimmed) */}
+                          {servedOrders.length > 0 && (
+                            <div className="pt-2 space-y-2">
+                              <p className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">Served</p>
+                              {servedOrders.map(order => (
+                                <div key={`${order.id}-${order.selectedVariationId}`} className="bg-gray-50 rounded-lg p-2 border border-gray-100 flex justify-between items-center opacity-60">
+                                  <span className="text-sm text-gray-600 line-through">{order.name} (x{order.quantity})</span>
                                   <button 
                                     onClick={() => toggleOrderServed(order.id, order.selectedVariationId)}
-                                    className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-green-50 hover:text-green-600 hover:border-green-200 transition-colors"
+                                    className="text-green-600"
                                   >
                                     <CheckCircle2 className="w-4 h-4" />
                                   </button>
                                 </div>
-                                {order.selectedVariationName && (
-                                  <p className="text-xs text-[#8B4513] mt-1 bg-[#FFFBF0] inline-block px-2 py-0.5 rounded">
-                                    {order.selectedVariationName}
-                                  </p>
-                                )}
-                              </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Bill Status Section */}
+                      {selectedTableId === '12' && billTotal > 0 && (
+                        <div className="mt-6 bg-[#FFFBF0] rounded-xl p-4 border border-[#D4AF37]/20">
+                          <h3 className="text-xs font-bold text-[#8B4513] uppercase tracking-wider mb-3">Bill Status</h3>
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm text-[#5C4033]">Total</span>
+                            <span className="font-serif font-bold text-lg text-[#2C2C2C]">£{billTotal.toFixed(2)}</span>
+                          </div>
+                          
+                          <div className="flex justify-between items-center mb-2">
+                             <span className="text-sm text-[#5C4033]">Split Type</span>
+                             <span className="text-sm font-medium text-[#2C2C2C] capitalize">
+                               {sharingModel === 'separate' ? `Split (${partySize} ways)` : (sharingModel || 'Standard')}
+                             </span>
+                          </div>
+
+                          {sharingModel === 'separate' && partySize && (
+                            <div className="flex justify-between items-center mb-2 pl-2 border-l-2 border-[#D4AF37]/20">
+                              <span className="text-xs text-[#5C4033]">Per Person</span>
+                              <span className="text-sm font-medium text-[#2C2C2C]">£{(billTotal / partySize).toFixed(2)}</span>
+                            </div>
+                          )}
+
+                          <div className="flex justify-between items-center mt-3 pt-3 border-t border-[#D4AF37]/10">
+                            <span className="text-sm text-[#5C4033]">Payment Status</span>
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">Open</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Completed History */}
+                      {completedRequests.length > 0 && (
+                        <div className="space-y-3 pt-4 border-t border-gray-100">
+                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">History</h3>
+                          {completedRequests.map((req) => (
+                            <div key={req.id} className="bg-white p-3 rounded-lg border border-gray-100 flex justify-between items-center opacity-60">
+                              <span className="text-sm text-gray-600 line-through">{req.details || req.type}</span>
+                              <CheckCircle2 className="w-4 h-4 text-green-500" />
                             </div>
                           ))}
                         </div>
-                      </section>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-center p-8 text-gray-400">
-                      <div className="w-16 h-16 rounded-full bg-[#F5F2EA] flex items-center justify-center mb-4">
-                        <Users className="w-8 h-8 text-[#D4AF37]/50" />
-                      </div>
-                      <p className="font-medium text-[#2C2C2C]">Table is {selectedTable.status}</p>
-                      <p className="text-sm mt-2">Seat guests to view orders and requests</p>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="w-[400px] bg-white border-l border-[#D4AF37]/20 shadow-2xl z-10 flex flex-col h-full"
-              >
-                <div className="p-6 border-b border-[#F5F2EA] bg-[#FFFBF0]">
-                  <h2 className="font-serif text-2xl text-[#2C2C2C]">Shift Activity</h2>
-                  <p className="text-[#8B4513] text-sm mt-1">Live updates from the floor</p>
-                </div>
-                
-                <div className="flex-1 overflow-y-auto p-6">
-                  <div className="space-y-6">
-                    {/* Recent Requests Feed */}
-                    <div>
-                      <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Recent Requests</h3>
-                      <div className="space-y-4">
-                        {serviceRequests.slice(0, 5).map(req => (
-                          <div key={req.id} className="flex gap-3 items-start">
-                            <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${req.status === 'completed' ? 'bg-green-400' : 'bg-red-400 animate-pulse'}`} />
-                            <div>
-                              <p className="text-sm font-medium text-[#2C2C2C]">
-                                Table {req.tableNumber} • <span className="capitalize">{req.type}</span>
-                              </p>
-                              <p className="text-xs text-gray-500 mt-0.5">{format(req.timestamp, 'h:mm a')}</p>
-                            </div>
-                          </div>
-                        ))}
-                        {serviceRequests.length === 0 && (
-                          <p className="text-sm text-gray-400 italic">No recent activity</p>
-                        )}
-                      </div>
-                    </div>
+                      )}
 
-                    {/* Floor Stats */}
-                    <div>
-                      <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Floor Status</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-[#F9F9F9] p-4 rounded-xl">
-                          <p className="text-2xl font-serif text-[#2C2C2C]">{tables.filter(t => t.status === 'occupied').length}</p>
-                          <p className="text-xs text-gray-500 uppercase tracking-wider mt-1">Active Tables</p>
+                      {/* Empty State */}
+                      {activeRequests.length === 0 && activeOrders.length === 0 && servedOrders.length === 0 && completedRequests.length === 0 && (
+                        <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-50">
+                          <div className="w-16 h-16 rounded-full bg-[#F5F2EA] flex items-center justify-center mb-4">
+                            <CheckCircle2 className="w-8 h-8 text-[#D4AF37]" />
+                          </div>
+                          <p className="font-serif text-[#2C2C2C] text-lg">All Clear</p>
+                          <p className="text-sm text-[#5C4033]">No active requests or orders.</p>
                         </div>
-                        <div className="bg-[#F9F9F9] p-4 rounded-xl">
-                          <p className="text-2xl font-serif text-[#2C2C2C]">{tables.filter(t => t.status === 'available').length}</p>
-                          <p className="text-xs text-gray-500 uppercase tracking-wider mt-1">Available</p>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex-1 flex flex-col bg-[#FAFAFA]">
+                    <div className="p-6 border-b border-[#E5E5E5] bg-white">
+                      <h2 className="font-serif text-xl font-bold text-[#2C2C2C]">Shift Activity</h2>
+                      <p className="text-xs text-[#8B4513] uppercase tracking-wider mt-1">Live Feed • {serviceRequests.length} Requests</p>
+                    </div>
+                    
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                      {serviceRequests.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full text-[#8B4513]/40">
+                          <Clock className="w-12 h-12 mb-3 opacity-20" />
+                          <p className="text-sm">No activity yet</p>
                         </div>
-                      </div>
+                      ) : (
+                        serviceRequests.sort((a, b) => b.timestamp - a.timestamp).map((req) => (
+                          <div 
+                            key={req.id}
+                            className="bg-white p-4 rounded-xl border border-[#E5E5E5] shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                            onClick={() => {
+                              // Find table by name (assuming tableNumber matches name without T/B prefix logic for now, or just try to find it)
+                              // The store saves tableNumber as string.
+                              const table = tables.find(t => t.name === `T${req.tableNumber}` || t.name === `B${req.tableNumber}` || t.name === req.tableNumber);
+                              if (table) setSelectedTableId(table.id);
+                            }}
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="font-serif font-bold text-[#2C2C2C] bg-[#F5F2EA] px-2 py-1 rounded text-sm">
+                                  {req.tableNumber.startsWith('T') || req.tableNumber.startsWith('B') ? req.tableNumber : `T${req.tableNumber}`}
+                                </span>
+                                <span className="text-xs text-gray-400">
+                                  {format(req.timestamp, 'h:mm a')}
+                                </span>
+                              </div>
+                              <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${
+                                req.status === 'pending' ? 'bg-red-100 text-red-600' :
+                                req.status === 'acknowledged' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-green-100 text-green-700'
+                              }`}>
+                                {req.status}
+                              </span>
+                            </div>
+                            <p className="text-sm font-medium text-[#5C4033]">
+                              {req.type === 'custom' ? req.details : req.type.charAt(0).toUpperCase() + req.type.slice(1)}
+                            </p>
+                            {req.type !== 'custom' && req.details && (
+                              <p className="text-xs text-gray-500 mt-1">{req.details}</p>
+                            )}
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
-                </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
+
         </div>
       </div>
     </div>
