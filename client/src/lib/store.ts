@@ -35,7 +35,7 @@ interface AppState {
   cart: CartItem[];
   
   // Orders State (Submitted items)
-  orders: CartItem[];
+  orders: (CartItem & { served?: boolean })[];
   
   orderStatus: 'draft' | 'pending' | 'confirmed' | 'completed';
   
@@ -54,6 +54,9 @@ interface AppState {
   // Service Request Actions
   addServiceRequest: (type: ServiceRequestType, details: string) => void;
   updateServiceRequestStatus: (id: string, status: ServiceRequestStatus) => void;
+  
+  // Order Actions
+  toggleOrderServed: (orderId: string, variationId?: string) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -62,7 +65,7 @@ export const useStore = create<AppState>()(
       hasVisited: false,
       partySize: null,
       sharingModel: null,
-      tableNumber: '4', // Default for demo
+      tableNumber: '12', // Default for demo
       cart: [],
       orders: [],
       orderStatus: 'draft',
@@ -172,6 +175,14 @@ export const useStore = create<AppState>()(
       updateServiceRequestStatus: (id: string, status: ServiceRequestStatus) => set((state: AppState) => ({
         serviceRequests: state.serviceRequests.map(req => 
           req.id === id ? { ...req, status } : req
+        )
+      })),
+
+      toggleOrderServed: (orderId: string, variationId?: string) => set((state: AppState) => ({
+        orders: state.orders.map(order => 
+          (order.id === orderId && order.selectedVariationId === variationId)
+            ? { ...order, served: !order.served }
+            : order
         )
       }))
     }),

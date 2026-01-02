@@ -1,1 +1,4 @@
-- [ ] Increase Staff Dashboard tablet container size on desktop (remove 4:3 constraint)
+- [ ] Update Store: Set default table to '12' and add 'served' status to orders
+- [ ] Implement Pinch-to-Zoom and Mouse Wheel Zoom for Staff Floor Plan
+- [ ] Update Staff Dashboard: Display Live Orders with 'Delivered' toggle
+- [ ] Update Staff Dashboard: Display Bill Split status and Total

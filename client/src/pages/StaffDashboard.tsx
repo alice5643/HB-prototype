@@ -32,13 +32,14 @@ const TABLES = [
 ];
 
 export default function StaffDashboard() {
-  const { serviceRequests, updateServiceRequestStatus } = useStore();
+  const { serviceRequests, updateServiceRequestStatus, orders, toggleOrderServed, sharingModel, partySize } = useStore();
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
   
-  // Map Panning State
+  // Map Panning & Zooming State
   const mapRef = useRef<HTMLDivElement>(null);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [scale, setScale] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
@@ -60,6 +61,14 @@ export default function StaffDashboard() {
     setIsDragging(false);
   };
 
+  // Handle Wheel Zoom
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const scaleSensitivity = 0.001;
+    const newScale = Math.min(Math.max(0.5, scale - e.deltaY * scaleSensitivity), 3);
+    setScale(newScale);
+  };
+
   // Filter requests for the selected table
   const tableRequests = selectedTableId 
     ? serviceRequests.filter(r => r.tableNumber === TABLES.find(t => t.id === selectedTableId)?.name.replace('T', ''))
@@ -67,6 +76,17 @@ export default function StaffDashboard() {
 
   const activeRequests = tableRequests.filter(r => r.status !== 'completed');
   const completedRequests = tableRequests.filter(r => r.status === 'completed');
+
+  // Filter orders for the selected table
+  const tableOrders = selectedTableId
+    ? orders // In a real app, we would filter by tableId here. For demo, we assume all orders are for the current user (T12)
+    : [];
+    
+  const activeOrders = tableOrders.filter(o => !o.served);
+  const servedOrders = tableOrders.filter(o => o.served);
+
+  // Calculate Bill Total
+  const billTotal = tableOrders.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   // Get requests for a specific table to show indicators
   const getTableRequests = (tableId: string) => {
@@ -105,13 +125,14 @@ export default function StaffDashboard() {
         {/* Main Content Area - Split View */}
         <div className="flex-1 flex overflow-hidden relative">
           
-          {/* Left: Interactive Floor Plan (Pannable) */}
+          {/* Left: Interactive Floor Plan (Pannable & Zoomable) */}
           <div 
             className="flex-1 bg-[#F0EAD6] relative overflow-hidden cursor-grab active:cursor-grabbing"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onWheel={handleWheel}
             ref={mapRef}
           >
             {/* Grid Pattern Background */}
@@ -124,10 +145,10 @@ export default function StaffDashboard() {
               }}
             />
 
-            {/* Draggable Map Container */}
+            {/* Draggable & Zoomable Map Container */}
             <motion.div 
-              className="absolute top-0 left-0 w-[1000px] h-[1000px]"
-              style={{ x: pan.x, y: pan.y }}
+              className="absolute top-0 left-0 w-[1000px] h-[1000px] origin-top-left"
+              style={{ x: pan.x, y: pan.y, scale: scale }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
               {TABLES.map((table) => {
@@ -242,77 +263,156 @@ export default function StaffDashboard() {
                       </div>
                     </div>
 
-                    {/* Requests List */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#FAFAFA]">
-                      {activeRequests.length === 0 && completedRequests.length === 0 ? (
+                    {/* Requests & Orders List */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-[#FAFAFA]">
+                      
+                      {/* Active Requests Section */}
+                      {activeRequests.length > 0 && (
+                        <div className="space-y-3">
+                          <h3 className="text-xs font-bold text-[#8B4513] uppercase tracking-wider ml-1">Active Requests</h3>
+                          {activeRequests.map((req) => (
+                            <motion.div 
+                              key={req.id}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="bg-white p-4 rounded-xl border-l-4 border-red-500 shadow-sm"
+                            >
+                              <div className="flex justify-between items-start mb-3">
+                                <div className="flex items-center gap-2">
+                                  {/* @ts-ignore - Types are compatible but TS is strict about string literals */}
+                                  {req.type === 'water' && <GlassWater className="w-4 h-4 text-[#5C4033]" />}
+                                  {req.type === 'cutlery' && <Utensils className="w-4 h-4 text-[#5C4033]" />}
+                                  {/* @ts-ignore - Types are compatible but TS is strict about string literals */}
+                                  {req.type === 'service' && <ChefHat className="w-4 h-4 text-[#5C4033]" />}
+                                  <span className="font-medium text-[#2C2C2C]">{req.details || req.type}</span>
+                                </div>
+                                <span className="text-xs text-gray-400 font-mono">
+                                  {format(new Date(req.timestamp), 'HH:mm')}
+                                </span>
+                              </div>
+                              
+                              <div className="flex gap-2">
+                                {req.status === 'pending' && (
+                                  <button 
+                                    onClick={() => updateServiceRequestStatus(req.id, 'acknowledged')}
+                                    className="flex-1 bg-[#FFFBF0] text-[#8B4513] border border-[#D4AF37]/30 py-2 rounded-lg text-sm font-medium hover:bg-[#F5F2EA] transition-colors"
+                                  >
+                                    Acknowledge
+                                  </button>
+                                )}
+                                <button 
+                                  onClick={() => updateServiceRequestStatus(req.id, 'completed')}
+                                  className="flex-1 bg-[#2C2C2C] text-[#F5F2EA] py-2 rounded-lg text-sm font-medium hover:bg-black transition-colors"
+                                >
+                                  Complete
+                                </button>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Live Orders Section */}
+                      {selectedTableId === '12' && (activeOrders.length > 0 || servedOrders.length > 0) && (
+                        <div className="space-y-3">
+                          <h3 className="text-xs font-bold text-[#8B4513] uppercase tracking-wider flex items-center gap-2">
+                            <Utensils className="w-3 h-3" />
+                            Live Orders
+                          </h3>
+                          
+                          {/* Active Orders */}
+                          {activeOrders.map(order => (
+                            <div key={`${order.id}-${order.selectedVariationId}`} className="bg-white rounded-xl p-3 border border-[#E5E5E5] shadow-sm flex justify-between items-center">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-serif font-medium text-[#2C2C2C]">{order.name}</span>
+                                  <span className="text-xs bg-[#F5F2EA] text-[#8B4513] px-1.5 py-0.5 rounded">x{order.quantity}</span>
+                                </div>
+                                {order.selectedVariationName && (
+                                  <p className="text-xs text-gray-500">{order.selectedVariationName}</p>
+                                )}
+                              </div>
+                              <button 
+                                onClick={() => toggleOrderServed(order.id, order.selectedVariationId)}
+                                className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:bg-green-50 hover:border-green-200 hover:text-green-600 transition-colors"
+                              >
+                                <CheckCircle2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+
+                          {/* Served Orders (Collapsed/Dimmed) */}
+                          {servedOrders.length > 0 && (
+                            <div className="pt-2 space-y-2">
+                              <p className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">Served</p>
+                              {servedOrders.map(order => (
+                                <div key={`${order.id}-${order.selectedVariationId}`} className="bg-gray-50 rounded-lg p-2 border border-gray-100 flex justify-between items-center opacity-60">
+                                  <span className="text-sm text-gray-600 line-through">{order.name} (x{order.quantity})</span>
+                                  <button 
+                                    onClick={() => toggleOrderServed(order.id, order.selectedVariationId)}
+                                    className="text-green-600"
+                                  >
+                                    <CheckCircle2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Bill Status Section */}
+                      {selectedTableId === '12' && billTotal > 0 && (
+                        <div className="mt-6 bg-[#FFFBF0] rounded-xl p-4 border border-[#D4AF37]/20">
+                          <h3 className="text-xs font-bold text-[#8B4513] uppercase tracking-wider mb-3">Bill Status</h3>
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm text-[#5C4033]">Total</span>
+                            <span className="font-serif font-bold text-lg text-[#2C2C2C]">£{billTotal.toFixed(2)}</span>
+                          </div>
+                          
+                          <div className="flex justify-between items-center mb-2">
+                             <span className="text-sm text-[#5C4033]">Split Type</span>
+                             <span className="text-sm font-medium text-[#2C2C2C] capitalize">
+                               {sharingModel === 'separate' ? `Split (${partySize} ways)` : (sharingModel || 'Standard')}
+                             </span>
+                          </div>
+
+                          {sharingModel === 'separate' && partySize && (
+                            <div className="flex justify-between items-center mb-2 pl-2 border-l-2 border-[#D4AF37]/20">
+                              <span className="text-xs text-[#5C4033]">Per Person</span>
+                              <span className="text-sm font-medium text-[#2C2C2C]">£{(billTotal / partySize).toFixed(2)}</span>
+                            </div>
+                          )}
+
+                          <div className="flex justify-between items-center mt-3 pt-3 border-t border-[#D4AF37]/10">
+                            <span className="text-sm text-[#5C4033]">Payment Status</span>
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">Open</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Completed History */}
+                      {completedRequests.length > 0 && (
+                        <div className="space-y-3 pt-4 border-t border-gray-100">
+                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">History</h3>
+                          {completedRequests.map((req) => (
+                            <div key={req.id} className="bg-white p-3 rounded-lg border border-gray-100 flex justify-between items-center opacity-60">
+                              <span className="text-sm text-gray-600 line-through">{req.details || req.type}</span>
+                              <CheckCircle2 className="w-4 h-4 text-green-500" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Empty State */}
+                      {activeRequests.length === 0 && activeOrders.length === 0 && servedOrders.length === 0 && completedRequests.length === 0 && (
                         <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-50">
                           <div className="w-16 h-16 rounded-full bg-[#F5F2EA] flex items-center justify-center mb-4">
                             <CheckCircle2 className="w-8 h-8 text-[#D4AF37]" />
                           </div>
                           <p className="font-serif text-[#2C2C2C] text-lg">All Clear</p>
-                          <p className="text-sm text-[#5C4033]">No active requests for this table.</p>
+                          <p className="text-sm text-[#5C4033]">No active requests or orders.</p>
                         </div>
-                      ) : (
-                        <>
-                          {/* Active Requests */}
-                          {activeRequests.length > 0 && (
-                            <div className="space-y-3">
-                              <h3 className="text-xs font-bold text-[#8B4513] uppercase tracking-wider ml-1">Active Requests</h3>
-                              {activeRequests.map((req) => (
-                                <motion.div 
-                                  key={req.id}
-                                  initial={{ opacity: 0, y: 10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  className="bg-white p-4 rounded-xl border-l-4 border-red-500 shadow-sm"
-                                >
-                                  <div className="flex justify-between items-start mb-3">
-                                    <div className="flex items-center gap-2">
-                                      {/* @ts-ignore - Types are compatible but TS is strict about string literals */}
-                                      {req.type === 'water' && <GlassWater className="w-4 h-4 text-[#5C4033]" />}
-                                      {req.type === 'cutlery' && <Utensils className="w-4 h-4 text-[#5C4033]" />}
-                                      {/* @ts-ignore - Types are compatible but TS is strict about string literals */}
-                                      {req.type === 'service' && <ChefHat className="w-4 h-4 text-[#5C4033]" />}
-                                      <span className="font-medium text-[#2C2C2C]">{req.details || req.type}</span>
-                                    </div>
-                                    <span className="text-xs text-gray-400 font-mono">
-                                      {format(new Date(req.timestamp), 'HH:mm')}
-                                    </span>
-                                  </div>
-                                  
-                                  <div className="flex gap-2">
-                                    {req.status === 'pending' && (
-                                      <button 
-                                        onClick={() => updateServiceRequestStatus(req.id, 'acknowledged')}
-                                        className="flex-1 bg-[#FFFBF0] text-[#8B4513] border border-[#D4AF37]/30 py-2 rounded-lg text-sm font-medium hover:bg-[#F5F2EA] transition-colors"
-                                      >
-                                        Acknowledge
-                                      </button>
-                                    )}
-                                    <button 
-                                      onClick={() => updateServiceRequestStatus(req.id, 'completed')}
-                                      className="flex-1 bg-[#2C2C2C] text-[#F5F2EA] py-2 rounded-lg text-sm font-medium hover:bg-black transition-colors"
-                                    >
-                                      Complete
-                                    </button>
-                                  </div>
-                                </motion.div>
-                              ))}
-                            </div>
-                          )}
-
-                          {/* Completed History */}
-                          {completedRequests.length > 0 && (
-                            <div className="space-y-3 pt-4 border-t border-gray-100">
-                              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">History</h3>
-                              {completedRequests.map((req) => (
-                                <div key={req.id} className="bg-white p-3 rounded-lg border border-gray-100 flex justify-between items-center opacity-60">
-                                  <span className="text-sm text-gray-600 line-through">{req.details || req.type}</span>
-                                  <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </>
                       )}
                     </div>
                   </>
