@@ -1,4 +1,3 @@
-- [ ] Redesign Staff Dashboard layout: Split screen (Floor Plan + Action Panel)
-- [ ] Implement 'Ritual' aesthetic for Staff Dashboard (Paper texture, Gold borders)
-- [ ] Create interactive Floor Plan component with table status indicators
-- [ ] Implement responsive behavior for mobile (vertical stack) vs tablet (horizontal split)
+- [ ] Implement fixed-aspect ratio tablet container for desktop view
+- [ ] Implement pannable/scrollable floor plan for mobile view
+- [ ] Adjust Action Panel to be non-obtrusive (slide-over/bottom sheet) on mobile
