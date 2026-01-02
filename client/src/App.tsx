@@ -44,10 +44,26 @@ function Router() {
        <Route path="/staff" component={StaffDashboard} />
       
       {/* Console Routes */}
-      <Route path="/console" component={ConsoleDashboard} />
-      <Route path="/console/venue" component={ConsoleVenue} />
-      <Route path="/console/staff" component={ConsoleStaff} />
-      <Route path="/console/menu" component={ConsoleMenu} />
+      <Route path="/console" component={() => (
+        <div className="console-layout-wrapper">
+          <ConsoleDashboard />
+        </div>
+      )} />
+      <Route path="/console/venue" component={() => (
+        <div className="console-layout-wrapper">
+          <ConsoleVenue />
+        </div>
+      )} />
+      <Route path="/console/staff" component={() => (
+        <div className="console-layout-wrapper">
+          <ConsoleStaff />
+        </div>
+      )} />
+      <Route path="/console/menu" component={() => (
+        <div className="console-layout-wrapper">
+          <ConsoleMenu />
+        </div>
+      )} />
 
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
