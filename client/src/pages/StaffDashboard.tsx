@@ -40,7 +40,7 @@ const TableTimer = ({ startTime }: { startTime?: number }) => {
 };
 
 export default function StaffDashboard() {
-  const { serviceRequests, updateServiceRequestStatus, orders, toggleOrderServed, sharingModel, partySize, tables, updateTableStatus, joinTables, resetTables } = useStore();
+  const { serviceRequests, updateServiceRequestStatus, orders, toggleOrderServed, sharingModel, partySize, tables, updateTableStatus, joinTables, splitTable, resetTables } = useStore();
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false); // State for join mode
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
@@ -93,6 +93,8 @@ export default function StaffDashboard() {
     
   const activeOrders = tableOrders.filter(o => !o.served);
   const servedOrders = tableOrders.filter(o => o.served);
+
+  const selectedTable = selectedTableId ? tables.find(t => t.id === selectedTableId) : null;
 
   // Calculate Bill Total
   const billTotal = tableOrders.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -196,14 +198,17 @@ export default function StaffDashboard() {
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent drag start
                       if (isJoining && selectedTableId && selectedTableId !== table.id) {
-                        if (confirm(`Join ${tables.find(t => t.id === selectedTableId)?.name} with ${table.name}?`)) {
-                          joinTables(selectedTableId, table.id);
-                          setSelectedTableId(table.id);
-                          setIsJoining(false);
-                        }
+                        // Join logic: Join selected table INTO the clicked table
+                        // We keep the clicked table as the new "master" (target)
+                        joinTables(selectedTableId, table.id);
+                        setSelectedTableId(table.id); // Select the new merged table
+                        // Keep isJoining true to allow chaining more tables
                       } else {
                         setSelectedTableId(table.id);
-                        setIsJoining(false); // Cancel join if clicking same table or just selecting
+                        // Only cancel join mode if we click the same table again to toggle off, or if we want to stop.
+                        if (selectedTableId === table.id && isJoining) {
+                           setIsJoining(false);
+                        }
                       }
                     }}
                     whileHover={{ scale: 1.05 }}
@@ -320,11 +325,27 @@ export default function StaffDashboard() {
                         onClick={() => setIsJoining(!isJoining)}
                       >
                         <Users className="w-4 h-4" />
-                        {isJoining ? 'Select Target Table...' : 'Join Table'}
+                        {isJoining ? 'Tap tables to merge...' : 'Join Table'}
                       </button>
+                      
+                      {/* Split Table Button (Only if merged) */}
+                      {selectedTable?.mergedIds && selectedTable.mergedIds.length > 0 && (
+                        <button 
+                          className="w-full mt-2 py-2 border border-red-200 bg-red-50 text-red-600 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-red-100 transition-colors"
+                          onClick={() => {
+                            if (confirm('Split this table back to original arrangement?')) {
+                              splitTable(selectedTable.id);
+                              setIsJoining(false);
+                            }
+                          }}
+                        >
+                          Split Table
+                        </button>
+                      )}
+
                       {isJoining && (
                         <p className="text-[10px] text-center text-[#D4AF37] mt-1 font-medium">
-                          Tap another table to merge
+                          Tap another table to merge it into this one
                         </p>
                       )}
                     </div>

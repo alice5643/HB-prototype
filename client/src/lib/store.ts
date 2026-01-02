@@ -18,6 +18,9 @@ export interface Table {
   y: number;
   status: TableStatus;
   seatedTime?: number; // Timestamp when table became occupied
+  mergedIds?: string[]; // IDs of tables merged into this one
+  originalName?: string; // Original name before merge
+  originalSeats?: number; // Original seats before merge
 }
 
 export interface ServiceRequest {
@@ -76,6 +79,7 @@ interface AppState {
   // Table Actions
   updateTableStatus: (tableId: string, status: TableStatus) => void;
   joinTables: (sourceTableId: string, targetTableId: string) => void;
+  splitTable: (tableId: string) => void;
   resetTables: () => void;
 }
 
@@ -245,32 +249,57 @@ export const useStore = create<AppState>()(
         const targetTable = state.tables.find(t => t.id === targetTableId);
         
         if (!sourceTable || !targetTable) return {};
-
-        // Prevent joining if already joined or same table
         if (sourceTableId === targetTableId) return {};
 
-        // Logic to avoid duplicate names like "T1+T2+T1"
-        // We'll just append the new part if it's not already in the name, 
-        // but for simplicity let's just use the original names if possible or a cleaner format.
-        // A better approach for a real app is to keep a list of joined IDs.
-        // Here we will just check if the source name is already part of the target name to avoid basic duplication
-        // But since we are hiding the source, we can just append.
-        
-        // Fix: If target already has a complex name, we might want to be careful.
-        // Let's just append for now but ensure we don't re-add the same ID if we were tracking IDs.
-        // Since we are using names, let's just append.
-        
+        // Check if source is already part of target's mergedIds to prevent duplicates
+        if (targetTable.mergedIds?.includes(sourceTableId)) return {};
+
         return {
           tables: state.tables.map(table => {
             if (table.id === targetTableId) {
+              const mergedIds = [...(table.mergedIds || []), sourceTableId, ...(sourceTable.mergedIds || [])];
+              // Deduplicate mergedIds
+              const uniqueMergedIds = Array.from(new Set(mergedIds));
+              
               return { 
                 ...table, 
-                name: `${targetTable.name}+${sourceTable.name}`, 
-                seats: table.seats + sourceTable.seats 
+                name: `${table.name}+${sourceTable.name}`, 
+                seats: table.seats + sourceTable.seats,
+                mergedIds: uniqueMergedIds,
+                originalName: table.originalName || table.name,
+                originalSeats: table.originalSeats || table.seats
               };
             }
             if (table.id === sourceTableId) {
-              return { ...table, status: 'hidden' }; // Hide the source table
+              return { ...table, status: 'hidden' }; 
+            }
+            return table;
+          })
+        };
+      }),
+
+      splitTable: (tableId: string) => set((state: AppState) => {
+        const targetTable = state.tables.find(t => t.id === tableId);
+        if (!targetTable || !targetTable.mergedIds || targetTable.mergedIds.length === 0) return {};
+
+        const idsToRestore = targetTable.mergedIds;
+
+        return {
+          tables: state.tables.map(table => {
+            // Restore the target table to original state
+            if (table.id === tableId) {
+              return {
+                ...table,
+                name: table.originalName || table.name,
+                seats: table.originalSeats || table.seats,
+                mergedIds: [],
+                originalName: undefined,
+                originalSeats: undefined
+              };
+            }
+            // Unhide all tables that were merged into this one
+            if (idsToRestore.includes(table.id)) {
+              return { ...table, status: 'available' };
             }
             return table;
           })
