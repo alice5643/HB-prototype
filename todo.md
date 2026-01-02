@@ -1,3 +1,1 @@
-- [ ] Refactor Staff Dashboard layout: Static right panel on desktop, slide-over on mobile
-- [ ] Implement 'Drag-to-Pan' functionality for the floor plan map
-- [ ] Update container styles for fluid responsiveness on all screen sizes
+- [ ] Increase Staff Dashboard tablet container size on desktop (remove 4:3 constraint)

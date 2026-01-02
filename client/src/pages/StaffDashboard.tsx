@@ -77,7 +77,7 @@ export default function StaffDashboard() {
   return (
     <div className="staff-dashboard-wrapper min-h-screen bg-[#2C2C2C] flex items-center justify-center p-0 md:p-4 lg:p-8 overflow-hidden">
       {/* Tablet Container - Fluid Max Width */}
-      <div className="w-full h-full md:w-auto md:aspect-[4/3] md:max-h-[90vh] md:max-w-[1200px] bg-[#F5F2EA] md:rounded-[32px] md:shadow-2xl overflow-hidden flex flex-col relative md:border-[12px] md:border-[#1a1a1a]">
+      <div className="w-full h-full md:w-[95vw] md:h-[90vh] md:max-w-[1600px] bg-[#F5F2EA] md:rounded-[32px] md:shadow-2xl overflow-hidden flex flex-col relative md:border-[12px] md:border-[#1a1a1a]">
         
         {/* Header */}
         <div className="bg-[#FFFBF0] border-b border-[#D4AF37]/20 p-4 flex justify-between items-center z-20 shadow-sm shrink-0">
