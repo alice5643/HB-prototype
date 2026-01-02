@@ -1,5 +1,4 @@
-- [ ] Design data structure and update store for Service Requests
-- [ ] Update Customer Service screen to dispatch real requests
-- [ ] Create Staff Dashboard UI (Layout, Request Cards)
-- [ ] Implement 'Acknowledge' and 'Complete' logic in Staff Dashboard
-- [ ] Verify Customer-Staff interaction loop
+- [ ] Redesign Staff Dashboard layout: Split screen (Floor Plan + Action Panel)
+- [ ] Implement 'Ritual' aesthetic for Staff Dashboard (Paper texture, Gold borders)
+- [ ] Create interactive Floor Plan component with table status indicators
+- [ ] Implement responsive behavior for mobile (vertical stack) vs tablet (horizontal split)
