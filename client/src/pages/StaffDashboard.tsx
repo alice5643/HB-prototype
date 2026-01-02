@@ -160,7 +160,7 @@ export default function StaffDashboard() {
               style={{ x: pan.x, y: pan.y, scale: scale }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
-              {tables.map((table) => {
+              {tables.filter(t => t.status !== 'hidden').map((table) => {
                 const requests = getTableRequests(table.id);
                 const hasRequests = requests.length > 0;
                 const isSelected = selectedTableId === table.id;
@@ -229,15 +229,23 @@ export default function StaffDashboard() {
               <h3 className="font-serif text-[#2C2C2C] text-sm font-bold mb-2">Floor Plan</h3>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-white border border-[#D4AF37]" />
+                  <div className="w-3 h-3 rounded-lg bg-white border border-[#E5E5E5]" />
                   <span className="text-xs text-[#5C4033]">Available</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-[#D4AF37]" />
-                  <span className="text-xs text-[#5C4033]">Selected</span>
+                  <div className="w-3 h-3 rounded-lg bg-white border-2 border-[#2C2C2C]" />
+                  <span className="text-xs text-[#5C4033]">Occupied</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-white border border-red-500" />
+                  <div className="w-3 h-3 rounded-lg bg-[#F5F2EA] border border-dashed border-[#8B4513]/30" />
+                  <span className="text-xs text-[#5C4033]">Reserved</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-lg bg-gray-100 border border-gray-200" />
+                  <span className="text-xs text-[#5C4033]">Cleaning</span>
+                </div>
+                <div className="flex items-center gap-2 mt-1 pt-1 border-t border-gray-100">
+                  <div className="w-3 h-3 rounded-lg bg-white border border-red-500" />
                   <span className="text-xs text-[#5C4033]">Request</span>
                 </div>
               </div>

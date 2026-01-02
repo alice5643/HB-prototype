@@ -8,7 +8,7 @@ export type SharingModel = 'sharing' | 'separate' | 'mix';
 export type ServiceRequestType = 'refill' | 'cutlery' | 'condiment' | 'side' | 'custom' | 'bill';
 export type ServiceRequestStatus = 'pending' | 'acknowledged' | 'completed';
 
-export type TableStatus = 'available' | 'occupied' | 'reserved' | 'cleaning';
+export type TableStatus = 'available' | 'occupied' | 'reserved' | 'cleaning' | 'hidden';
 
 export interface Table {
   id: string;
@@ -240,9 +240,6 @@ export const useStore = create<AppState>()(
       })),
 
       joinTables: (sourceTableId: string, targetTableId: string) => set((state: AppState) => {
-        // This is a simplified join logic. In a real app, you'd merge orders, guests, etc.
-        // Here we just mark the source table as 'available' (moved) and maybe update the target table's capacity or name
-        // For visual simplicity, we'll just log it for now or maybe update the name to indicate join
         const sourceTable = state.tables.find(t => t.id === sourceTableId);
         const targetTable = state.tables.find(t => t.id === targetTableId);
         
@@ -251,10 +248,14 @@ export const useStore = create<AppState>()(
         return {
           tables: state.tables.map(table => {
             if (table.id === targetTableId) {
-              return { ...table, name: `${targetTable.name}+${sourceTable.name}`, seats: table.seats + sourceTable.seats };
+              return { 
+                ...table, 
+                name: `${targetTable.name}+${sourceTable.name}`, 
+                seats: table.seats + sourceTable.seats 
+              };
             }
             if (table.id === sourceTableId) {
-              return { ...table, status: 'available' }; // Source table becomes empty
+              return { ...table, status: 'hidden' }; // Hide the source table
             }
             return table;
           })
