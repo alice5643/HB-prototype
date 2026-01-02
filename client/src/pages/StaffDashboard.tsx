@@ -130,7 +130,10 @@ export default function StaffDashboard() {
             </div>
             <button 
               className="px-3 py-1.5 bg-[#FFFBF0] border border-[#D4AF37]/30 rounded-full text-[#8B4513] text-xs font-bold uppercase tracking-wider hover:bg-[#F5F2EA] transition-colors flex items-center gap-1"
-              onClick={simulateRequest}
+              onClick={() => {
+                simulateRequest();
+                setSelectedTableId(null); // Deselect table to show Shift Activity feed
+              }}
             >
               <Bell className="w-3 h-3" />
               Simulate

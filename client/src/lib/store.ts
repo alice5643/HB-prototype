@@ -92,8 +92,13 @@ export const useStore = create<AppState>()(
       sharingModel: null,
       tableNumber: '12', // Default for demo
       cart: [],
-      orders: [],
-      orderStatus: 'draft',
+      orders: [
+        { id: '1', name: 'Steak Frites', price: 32, quantity: 1, selectedVariationId: 'medium-rare', selectedVariationName: 'Medium Rare', served: false, description: 'Prime ribeye, herb butter, fries', category: 'mains', image: '/images/steak.jpg', tags: ['Meat'] },
+        { id: '2', name: 'Truffle Pasta', price: 28, quantity: 1, served: true, description: 'Fresh tagliatelle, black truffle, parmesan', category: 'mains', image: '/images/pasta.jpg', tags: ['Vegetarian'] },
+        { id: '3', name: 'Burrata', price: 18, quantity: 1, served: true, description: 'Heirloom tomatoes, basil pesto, balsamic', category: 'starters', image: '/images/burrata.jpg', tags: ['Vegetarian'] },
+        { id: '4', name: 'Red Wine', price: 14, quantity: 2, served: true, description: 'Cabernet Sauvignon, Napa Valley', category: 'drinks', image: '/images/wine.jpg', tags: ['Alcohol'] }
+      ],
+      orderStatus: 'pending',
       serviceRequests: [],
       tables: [
         { id: '1', name: 'T1', seats: 2, x: 100, y: 100, status: 'occupied', seatedTime: Date.now() - 1000 * 60 * 45 },
@@ -378,7 +383,15 @@ export const useStore = create<AppState>()(
           { id: 'b8', name: 'B8', seats: 1, x: 1100, y: 520, status: 'available' },
           { id: 'b9', name: 'B9', seats: 1, x: 1100, y: 580, status: 'available' },
           { id: 'b10', name: 'B10', seats: 1, x: 1100, y: 640, status: 'available' },
-        ]
+        ],
+        serviceRequests: [],
+        orders: [
+          { id: '1', name: 'Steak Frites', price: 32, quantity: 1, selectedVariationId: 'medium-rare', selectedVariationName: 'Medium Rare', served: false, description: 'Prime ribeye, herb butter, fries', category: 'mains', image: '/images/steak.jpg', tags: ['Meat'] },
+          { id: '2', name: 'Truffle Pasta', price: 28, quantity: 1, served: true, description: 'Fresh tagliatelle, black truffle, parmesan', category: 'mains', image: '/images/pasta.jpg', tags: ['Vegetarian'] },
+          { id: '3', name: 'Burrata', price: 18, quantity: 1, served: true, description: 'Heirloom tomatoes, basil pesto, balsamic', category: 'starters', image: '/images/burrata.jpg', tags: ['Vegetarian'] },
+          { id: '4', name: 'Red Wine', price: 14, quantity: 2, served: true, description: 'Cabernet Sauvignon, Napa Valley', category: 'drinks', image: '/images/wine.jpg', tags: ['Alcohol'] }
+        ],
+        orderStatus: 'pending'
       }))
     }),
     {
