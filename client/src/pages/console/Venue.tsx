@@ -236,7 +236,7 @@ export default function ConsoleVenue() {
             <div 
               className="absolute inset-0 opacity-[0.03] pointer-events-none"
               style={{
-                backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)',
+                backgroundImage: 'linear-gradient(#8B4513 1px, transparent 1px), linear-gradient(90deg, #8B4513 1px, transparent 1px)',
                 backgroundSize: '40px 40px',
                 transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`
               }}
@@ -285,6 +285,20 @@ export default function ConsoleVenue() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
+                    {/* Chairs - Visual Only */}
+                    {!table.name.startsWith('B') && (
+                      <>
+                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-[#8B4513]/20 rounded-full" />
+                        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-[#8B4513]/20 rounded-full" />
+                        {table.seats > 2 && (
+                          <>
+                            <div className="absolute top-1/2 -left-2 -translate-y-1/2 w-1 h-1/2 bg-[#8B4513]/20 rounded-full" />
+                            <div className="absolute top-1/2 -right-2 -translate-y-1/2 w-1 h-1/2 bg-[#8B4513]/20 rounded-full" />
+                          </>
+                        )}
+                      </>
+                    )}
+
                     <span className={`font-serif font-bold ${isSelected ? 'text-white' : 'text-[#2C2C2C]'} ${table.name.startsWith('B') ? 'text-sm' : 'text-lg'}`}>
                       {table.name}
                     </span>

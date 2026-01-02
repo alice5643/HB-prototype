@@ -113,8 +113,7 @@ export const useStore = create<AppState>()(
       serviceRequests: [],
       floors: [
         { id: 1, name: '1st Floor' },
-        { id: 2, name: '2nd Floor' },
-        { id: 3, name: '3rd Floor' }
+
       ],
       tables: [
         // 1st Floor
@@ -138,12 +137,7 @@ export const useStore = create<AppState>()(
         { id: 'b8', name: 'B8', seats: 1, x: 1100, y: 520, floor: 1, status: 'available' },
         { id: 'b9', name: 'B9', seats: 1, x: 1100, y: 580, floor: 1, status: 'available' },
         { id: 'b10', name: 'B10', seats: 1, x: 1100, y: 640, floor: 1, status: 'available' },
-        // 2nd Floor
-        { id: '201', name: 'T201', seats: 4, x: 200, y: 200, floor: 2, status: 'available' },
-        { id: '202', name: 'T202', seats: 4, x: 400, y: 200, floor: 2, status: 'available' },
-        { id: '203', name: 'T203', seats: 6, x: 600, y: 200, floor: 2, status: 'reserved' },
-        // 3rd Floor
-        { id: '301', name: 'T301', seats: 8, x: 400, y: 300, floor: 3, status: 'available' },
+
       ],
       
       setPartySize: (size: PartySize) => set({ partySize: size }),
