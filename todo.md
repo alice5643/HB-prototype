@@ -1,3 +1,3 @@
-- [ ] Identify and remove global mobile-width constraints for Staff Dashboard
-- [ ] Implement responsive layout wrapper that supports both mobile vertical and tablet horizontal views
-- [ ] Verify pannable map functionality on mobile and desktop
+- [ ] Refactor Staff Dashboard layout: Static right panel on desktop, slide-over on mobile
+- [ ] Implement 'Drag-to-Pan' functionality for the floor plan map
+- [ ] Update container styles for fluid responsiveness on all screen sizes
