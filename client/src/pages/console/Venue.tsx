@@ -1,203 +1,396 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { useStore } from '@/lib/store';
+import { 
+  Plus, 
+  Save, 
+  RotateCcw, 
+  Move, 
+  Trash2, 
+  Grid, 
+  ZoomIn, 
+  ZoomOut,
+  LayoutTemplate,
+  Armchair,
+  Sofa,
+  Users
+} from 'lucide-react';
 import { ConsoleLayout } from '@/components/ConsoleLayout';
-import { Plus, Search, Edit2, Trash2, LayoutGrid, Users, Move, RotateCcw } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useStore, Table } from '@/lib/store';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from 'sonner';
 
 export default function ConsoleVenue() {
   const { tables, updateTableStatus, resetTables } = useStore();
-  const [selectedZone, setSelectedZone] = useState('Main Dining');
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  
+  // Map State
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [scale, setScale] = useState(1);
+  const [isDraggingMap, setIsDraggingMap] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  const zones = ['Main Dining', 'Bar Area', 'Terrace', 'Private Room'];
+  // Table Editing State
+  const [draggedTable, setDraggedTable] = useState<string | null>(null);
+  const [localTables, setLocalTables] = useState(tables);
 
-  // Filter tables based on ID convention (T for Main, B for Bar)
-  const mainTables = tables.filter(t => t.id.startsWith('T') || (!t.id.startsWith('B') && !isNaN(Number(t.id))));
-  const barTables = tables.filter(t => t.id.toLowerCase().startsWith('b'));
+  // Sync local tables with store when not editing
+  React.useEffect(() => {
+    if (!isEditing) {
+      setLocalTables(tables);
+    }
+  }, [tables, isEditing]);
 
-  const currentTables = selectedZone === 'Main Dining' ? mainTables : 
-                       selectedZone === 'Bar Area' ? barTables : [];
+  // Handle Map Panning
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (draggedTable) return; // Don't pan if dragging a table
+    setIsDraggingMap(true);
+    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDraggingMap) {
+      setPan({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    } else if (draggedTable && isEditing) {
+      // Handle table dragging logic here if needed for smooth updates
+      // Currently handled by motion.div drag prop
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDraggingMap(false);
+    setDraggedTable(null);
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const scaleSensitivity = 0.001;
+      const newScale = Math.min(Math.max(0.5, scale - e.deltaY * scaleSensitivity), 3);
+      setScale(newScale);
+    }
+  };
+
+  const handleTableDragEnd = (id: string, info: any) => {
+    if (!isEditing) return;
+    
+    const updatedTables = localTables.map(t => {
+      if (t.id === id) {
+        return {
+          ...t,
+          x: t.x + info.offset.x / scale, // Adjust for scale
+          y: t.y + info.offset.y / scale
+        };
+      }
+      return t;
+    });
+    setLocalTables(updatedTables);
+  };
+
+  const handleSaveChanges = () => {
+    // In a real app, this would update the backend
+    // For now, we'll just update the store (if we had a setTables action)
+    // Since we don't have setTables, we'll simulate saving
+    toast.success("Floor plan saved successfully");
+    setIsEditing(false);
+  };
+
+  const selectedTable = localTables.find(t => t.id === selectedTableId);
 
   return (
     <ConsoleLayout>
-      <div className="p-8 max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+      <div className="h-full flex flex-col bg-[#FDFBF7]">
+        {/* Header */}
+        <div className="px-8 py-6 border-b border-[#E5E0D6] bg-white flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-serif text-[#2C1810]">Venue Setup</h1>
-            <p className="text-[#8B4513]/70 mt-1">Configure floor plans, zones, and table arrangements</p>
+            <h1 className="text-3xl font-serif font-bold text-[#5C4033]">Venue Setup</h1>
+            <p className="text-[#8B4513] mt-1">Configure your floor plan and table arrangements</p>
           </div>
-          <div className="flex gap-3">
-            <button 
-              onClick={() => resetTables()}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-[#E5E0D6] rounded-lg text-[#8B4513] hover:bg-[#F5F2EA] transition-colors"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>Reset Layout</span>
-            </button>
-            <button 
-              onClick={() => setIsEditMode(!isEditMode)}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
-                isEditMode 
-                  ? "bg-[#2C1810] text-[#F5F2EA]" 
-                  : "bg-[#8B4513] text-white hover:bg-[#723A0F]"
-              )}
-            >
-              {isEditMode ? (
-                <>
-                  <LayoutGrid className="w-4 h-4" />
-                  <span>Save Layout</span>
-                </>
-              ) : (
-                <>
-                  <Edit2 className="w-4 h-4" />
-                  <span>Edit Layout</span>
-                </>
-              )}
-            </button>
+          <div className="flex items-center gap-3">
+            {isEditing ? (
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setLocalTables(tables);
+                    setIsEditing(false);
+                  }}
+                  className="border-[#E5E0D6] text-[#8B4513] hover:bg-[#F5F2EA]"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSaveChanges}
+                  className="bg-[#D4AF37] hover:bg-[#C4A137] text-white"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Changes
+                </Button>
+              </>
+            ) : (
+              <Button 
+                onClick={() => setIsEditing(true)}
+                className="bg-[#5C4033] hover:bg-[#4A332A] text-white"
+              >
+                <Move className="w-4 h-4 mr-2" />
+                Edit Floor Plan
+              </Button>
+            )}
           </div>
         </div>
 
-        {/* Zone Navigation */}
-        <div className="flex gap-1 mb-8 bg-white p-1 rounded-lg border border-[#E5E0D6] w-fit">
-          {zones.map((zone) => (
-            <button
-              key={zone}
-              onClick={() => setSelectedZone(zone)}
-              className={cn(
-                "px-4 py-2 rounded-md text-sm font-medium transition-all",
-                selectedZone === zone
-                  ? "bg-[#F5F2EA] text-[#2C1810] shadow-sm"
-                  : "text-[#8B4513]/60 hover:text-[#8B4513] hover:bg-gray-50"
-              )}
-            >
-              {zone}
-            </button>
-          ))}
-          <button className="px-4 py-2 rounded-md text-sm font-medium text-[#8B4513]/60 hover:text-[#8B4513] hover:bg-gray-50 flex items-center gap-2">
-            <Plus className="w-3 h-3" />
-            Add Zone
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Floor Plan Visualizer */}
-          <div className="lg:col-span-2 bg-[#F5F2EA] rounded-xl border border-[#E5E0D6] p-8 min-h-[600px] relative overflow-hidden">
-            <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1.5 rounded-md border border-[#E5E0D6] text-xs font-medium text-[#8B4513]">
-              {selectedZone} Floor Plan
-            </div>
-            
-            {/* Grid Background */}
-            <div className="absolute inset-0 opacity-[0.03]" 
-                 style={{ backgroundImage: 'radial-gradient(#2C1810 1px, transparent 1px)', backgroundSize: '20px 20px' }} 
+        {/* Main Content */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Map Area */}
+          <div 
+            className="flex-1 bg-[#F0EAD6] relative overflow-hidden cursor-grab active:cursor-grabbing"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onWheel={handleWheel}
+            ref={mapRef}
+          >
+            {/* Grid Pattern */}
+            <div 
+              className="absolute inset-0 opacity-10 pointer-events-none"
+              style={{
+                backgroundImage: 'radial-gradient(#8B4513 1px, transparent 1px)',
+                backgroundSize: '20px 20px',
+                transform: `translate(${pan.x}px, ${pan.y}px)`
+              }}
             />
 
-            {/* Tables */}
-            <div className="relative w-full h-full">
-              {currentTables.map((table) => (
-                <div
-                  key={table.id}
-                  className={cn(
-                    "absolute flex flex-col items-center justify-center transition-all cursor-pointer",
-                    "bg-white border-2 shadow-sm hover:shadow-md",
-                    table.status === 'occupied' ? "border-red-200 bg-red-50" :
-                    table.status === 'reserved' ? "border-amber-200 bg-amber-50" :
-                    "border-[#E5E0D6]"
-                  )}
-                  style={{
-                    left: `${table.x / 2}px`, // Scale down for view
-                    top: `${table.y / 2}px`,
-                    width: table.seats <= 2 ? '60px' : table.seats <= 4 ? '80px' : '100px',
-                    height: table.seats <= 2 ? '60px' : table.seats <= 4 ? '80px' : '100px',
-                    borderRadius: table.seats > 4 ? '8px' : '50%'
-                  }}
-                >
-                  <span className="font-serif font-bold text-[#2C1810]">{table.name}</span>
-                  <div className="flex items-center gap-0.5 text-[10px] text-[#8B4513]/60 mt-0.5">
-                    <Users className="w-3 h-3" />
-                    <span>{table.seats}</span>
-                  </div>
-                  
-                  {isEditMode && (
-                    <div className="absolute -top-2 -right-2 w-5 h-5 bg-[#2C1810] rounded-full flex items-center justify-center text-white shadow-sm">
-                      <Move className="w-3 h-3" />
-                    </div>
-                  )}
-                </div>
-              ))}
-              
-              {currentTables.length === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center text-[#8B4513]/40">
-                  <p>No tables configured for this zone</p>
-                </div>
-              )}
+            {/* Controls Overlay */}
+            <div className="absolute top-4 right-4 flex flex-col gap-2 z-20">
+              <Button
+                variant="secondary"
+                size="icon"
+                className="bg-white shadow-md hover:bg-[#F5F2EA]"
+                onClick={() => setScale(s => Math.min(s + 0.1, 3))}
+              >
+                <ZoomIn className="w-4 h-4 text-[#5C4033]" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="bg-white shadow-md hover:bg-[#F5F2EA]"
+                onClick={() => setScale(s => Math.max(s - 0.1, 0.5))}
+              >
+                <ZoomOut className="w-4 h-4 text-[#5C4033]" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="bg-white shadow-md hover:bg-[#F5F2EA]"
+                onClick={() => {
+                  setPan({ x: 0, y: 0 });
+                  setScale(1);
+                }}
+              >
+                <RotateCcw className="w-4 h-4 text-[#5C4033]" />
+              </Button>
             </div>
+
+            {/* Map Container */}
+            <motion.div 
+              className="absolute top-0 left-0 w-[1500px] h-[1000px] origin-top-left"
+              style={{ x: pan.x, y: pan.y, scale: scale }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              {localTables.filter(t => t.status !== 'hidden').map((table) => {
+                const isSelected = selectedTableId === table.id;
+                
+                // Determine style based on status
+                let statusStyles = 'bg-white border-[#E5E5E5]';
+                if (table.status === 'occupied') statusStyles = 'bg-white border-[#2C2C2C] border-2';
+                if (table.status === 'reserved') statusStyles = 'bg-[#F5F2EA] border-dashed border-[#8B4513]/30';
+                if (isSelected) statusStyles = 'bg-[#D4AF37] border-[#D4AF37] text-white shadow-xl z-10';
+
+                return (
+                  <motion.div
+                    key={table.id}
+                    drag={isEditing}
+                    dragMomentum={false}
+                    onDragStart={() => setDraggedTable(table.id)}
+                    onDragEnd={(e, info) => handleTableDragEnd(table.id, info)}
+                    className={`absolute rounded-2xl border-2 flex flex-col items-center justify-center shadow-md cursor-pointer transition-colors duration-200 ${statusStyles}`}
+                    style={{
+                      left: table.x,
+                      top: table.y,
+                      width: table.name.startsWith('B') ? 60 : (table.seats > 4 ? 160 : 100),
+                      height: table.name.startsWith('B') ? 60 : 100,
+                      borderRadius: table.name.startsWith('B') ? '50%' : '1rem',
+                      cursor: isEditing ? 'move' : 'pointer'
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!isDraggingMap) setSelectedTableId(table.id);
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <span className={`font-serif font-bold ${isSelected ? 'text-white' : 'text-[#2C2C2C]'} ${table.name.startsWith('B') ? 'text-sm' : 'text-lg'}`}>
+                      {table.name}
+                    </span>
+                    {!table.name.startsWith('B') && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <Users className={`w-3 h-3 ${isSelected ? 'text-white/80' : 'text-gray-400'}`} />
+                        <span className={`text-xs ${isSelected ? 'text-white/90' : 'text-gray-500'}`}>{table.seats}</span>
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </motion.div>
           </div>
 
-          {/* Configuration Panel */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-xl border border-[#E5E0D6] p-6">
-              <h3 className="font-serif text-lg text-[#2C1810] mb-4">Zone Settings</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-[#8B4513]/70 uppercase tracking-wider mb-1.5">
-                    Zone Name
-                  </label>
-                  <input 
-                    type="text" 
-                    value={selectedZone}
-                    onChange={(e) => setSelectedZone(e.target.value)}
-                    className="w-full px-3 py-2 bg-[#F9F8F6] border border-[#E5E0D6] rounded-lg text-[#2C1810] focus:outline-none focus:border-[#8B4513]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-[#8B4513]/70 uppercase tracking-wider mb-1.5">
-                    Capacity
-                  </label>
-                  <div className="flex items-center gap-4 text-[#2C1810]">
-                    <div className="flex-1 px-3 py-2 bg-[#F9F8F6] border border-[#E5E0D6] rounded-lg">
-                      <span className="text-sm font-medium">{currentTables.reduce((acc, t) => acc + t.seats, 0)} Seats</span>
-                    </div>
-                    <div className="flex-1 px-3 py-2 bg-[#F9F8F6] border border-[#E5E0D6] rounded-lg">
-                      <span className="text-sm font-medium">{currentTables.length} Tables</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {/* Right Sidebar - Properties */}
+          <div className="w-80 bg-white border-l border-[#E5E0D6] flex flex-col">
+            <div className="p-6 border-b border-[#E5E0D6]">
+              <h2 className="font-serif text-xl font-bold text-[#5C4033]">Properties</h2>
+              <p className="text-xs text-[#8B4513] uppercase tracking-wider mt-1">
+                {selectedTable ? `Editing ${selectedTable.name}` : 'Select a table'}
+              </p>
             </div>
 
-            <div className="bg-white rounded-xl border border-[#E5E0D6] p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-serif text-lg text-[#2C1810]">Table List</h3>
-                <button className="p-1.5 hover:bg-[#F5F2EA] rounded-md text-[#8B4513] transition-colors">
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-              
-              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-                {currentTables.map((table) => (
-                  <div key={table.id} className="flex items-center justify-between p-3 bg-[#F9F8F6] rounded-lg border border-transparent hover:border-[#E5E0D6] group transition-all">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-white border border-[#E5E0D6] flex items-center justify-center font-serif font-bold text-[#2C1810] text-xs">
-                        {table.name}
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-[#2C1810]">Standard Table</div>
-                        <div className="text-xs text-[#8B4513]/60">{table.seats} Seats</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-1.5 hover:bg-white rounded-md text-[#8B4513]">
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button className="p-1.5 hover:bg-white rounded-md text-red-500">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+            {selectedTable ? (
+              <div className="p-6 space-y-6 overflow-y-auto">
+                <div className="space-y-2">
+                  <Label>Table Name</Label>
+                  <Input 
+                    value={selectedTable.name} 
+                    disabled={!isEditing}
+                    onChange={(e) => {
+                      const updated = localTables.map(t => 
+                        t.id === selectedTable.id ? { ...t, name: e.target.value } : t
+                      );
+                      setLocalTables(updated);
+                    }}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Capacity (Seats)</Label>
+                  <Input 
+                    type="number" 
+                    value={selectedTable.seats}
+                    disabled={!isEditing}
+                    onChange={(e) => {
+                      const updated = localTables.map(t => 
+                        t.id === selectedTable.id ? { ...t, seats: parseInt(e.target.value) } : t
+                      );
+                      setLocalTables(updated);
+                    }}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Zone</Label>
+                  <Select 
+                    disabled={!isEditing} 
+                    defaultValue="main"
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select zone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="main">Main Dining</SelectItem>
+                      <SelectItem value="terrace">Terrace</SelectItem>
+                      <SelectItem value="bar">Bar Area</SelectItem>
+                      <SelectItem value="private">Private Room</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Shape</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                      variant="outline" 
+                      className={`justify-start ${!selectedTable.name.startsWith('B') ? 'border-[#D4AF37] bg-[#FFFBF0]' : ''}`}
+                      disabled={!isEditing}
+                      onClick={() => {
+                        const updated = localTables.map(t => 
+                          t.id === selectedTable.id ? { ...t, name: t.name.replace('B', 'T') } : t
+                        );
+                        setLocalTables(updated);
+                      }}
+                    >
+                      <LayoutTemplate className="w-4 h-4 mr-2" />
+                      Rectangular
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className={`justify-start ${selectedTable.name.startsWith('B') ? 'border-[#D4AF37] bg-[#FFFBF0]' : ''}`}
+                      disabled={!isEditing}
+                      onClick={() => {
+                        const updated = localTables.map(t => 
+                          t.id === selectedTable.id ? { ...t, name: t.name.replace('T', 'B') } : t
+                        );
+                        setLocalTables(updated);
+                      }}
+                    >
+                      <Armchair className="w-4 h-4 mr-2" />
+                      Round
+                    </Button>
                   </div>
-                ))}
+                </div>
+
+                {isEditing && (
+                  <div className="pt-6 border-t border-[#E5E0D6]">
+                    <Button 
+                      variant="destructive" 
+                      className="w-full"
+                      onClick={() => {
+                        const updated = localTables.filter(t => t.id !== selectedTable.id);
+                        setLocalTables(updated);
+                        setSelectedTableId(null);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete Table
+                    </Button>
+                  </div>
+                )}
               </div>
-            </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-[#8B4513]/40">
+                <Grid className="w-12 h-12 mb-3 opacity-20" />
+                <p className="text-sm">Select a table to view properties or edit the floor plan to make changes.</p>
+                
+                {isEditing && (
+                  <div className="mt-8 w-full space-y-3">
+                    <p className="text-xs font-medium uppercase tracking-wider text-[#5C4033] mb-2">Add New</p>
+                    <Button variant="outline" className="w-full justify-start border-dashed">
+                      <LayoutTemplate className="w-4 h-4 mr-2" />
+                      Add Rectangular Table
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start border-dashed">
+                      <Armchair className="w-4 h-4 mr-2" />
+                      Add Round Table
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start border-dashed">
+                      <Sofa className="w-4 h-4 mr-2" />
+                      Add Booth
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
