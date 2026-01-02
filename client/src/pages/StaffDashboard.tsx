@@ -18,6 +18,7 @@ import {
   MoreHorizontal,
   Bell
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 // Timer Component
 const TableTimer = ({ startTime }: { startTime?: number }) => {
@@ -204,13 +205,15 @@ export default function StaffDashboard() {
                 return (
                   <motion.div
                     key={table.id}
-                    className={`absolute rounded-2xl border-2 flex flex-col items-center justify-center shadow-md cursor-pointer transition-all duration-300 ${statusStyles}`}
+                    className={cn(
+                      "absolute flex items-center justify-center transition-all duration-300 cursor-pointer",
+                      isSelected ? "z-10 scale-110" : "hover:scale-105"
+                    )}
                     style={{
                       left: table.x,
                       top: table.y,
                       width: table.name.startsWith('B') ? 60 : (table.seats > 4 ? 160 : 100),
                       height: table.name.startsWith('B') ? 60 : 100,
-                      borderRadius: table.name.startsWith('B') ? '50%' : '1rem'
                     }}
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent drag start
@@ -228,346 +231,301 @@ export default function StaffDashboard() {
                         }
                       }
                     }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
                   >
-                    <span className={`font-serif font-bold ${isSelected ? 'text-white' : 'text-[#2C2C2C]'} ${table.name.startsWith('B') ? 'text-sm' : 'text-lg'}`}>
-                      {table.name}
-                    </span>
-                    {!table.name.startsWith('B') && (
-                      <div className="flex items-center gap-1 mt-1">
-                        <Users className={`w-3 h-3 ${isSelected ? 'text-white/80' : 'text-gray-400'}`} />
-                        <span className={`text-xs ${isSelected ? 'text-white/80' : 'text-gray-500'}`}>
-                          {table.seats}
-                        </span>
-                      </div>
-                    )}
+                    {/* Table Shape */}
+                    <div className={cn(
+                      "w-full h-full rounded-2xl border-2 flex flex-col items-center justify-center shadow-md relative",
+                      statusStyles,
+                      table.name.startsWith('B') && "rounded-full"
+                    )}>
+                      {/* Chairs - Visual Only */}
+                      {!table.name.startsWith('B') && (
+                        <>
+                          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-[#8B4513]/20 rounded-full" />
+                          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-[#8B4513]/20 rounded-full" />
+                          {table.seats > 2 && (
+                            <>
+                              <div className="absolute top-1/2 -left-2 -translate-y-1/2 w-1 h-1/2 bg-[#8B4513]/20 rounded-full" />
+                              <div className="absolute top-1/2 -right-2 -translate-y-1/2 w-1 h-1/2 bg-[#8B4513]/20 rounded-full" />
+                            </>
+                          )}
+                        </>
+                      )}
 
-                    {/* Request Badge */}
-                    {hasRequests && (
-                      <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm border border-white">
-                        {requests.length}
-                      </div>
-                    )}
+                      <span className={`font-serif font-bold ${isSelected ? 'text-white' : 'text-[#2C2C2C]'} ${table.name.startsWith('B') ? 'text-sm' : 'text-lg'}`}>
+                        {table.name}
+                      </span>
+                      
+                      {/* Timer for occupied tables */}
+                      {table.status === 'occupied' && table.seatedTime && (
+                        <div className={`text-[10px] font-medium mt-1 px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-[#F5F2EA] text-[#8B4513]'}`}>
+                          <TableTimer startTime={table.seatedTime} />
+                        </div>
+                      )}
+
+                      {/* Request Indicator Badge */}
+                      {hasRequests && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm animate-bounce">
+                          {requests.length}
+                        </div>
+                      )}
+                    </div>
                   </motion.div>
                 );
               })}
             </motion.div>
 
-            {/* Floor Plan Legend */}
-            <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm p-3 rounded-xl border border-[#D4AF37]/20 shadow-sm pointer-events-none">
-              <h3 className="font-serif text-[#2C2C2C] text-sm font-bold mb-2">Floor Plan</h3>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-lg bg-white border border-[#E5E5E5]" />
-                  <span className="text-xs text-[#5C4033]">Available</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-lg bg-white border-2 border-[#2C2C2C]" />
-                  <span className="text-xs text-[#5C4033]">Occupied</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-lg bg-[#F5F2EA] border border-dashed border-[#8B4513]/30" />
-                  <span className="text-xs text-[#5C4033]">Reserved</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-lg bg-gray-100 border border-gray-200" />
-                  <span className="text-xs text-[#5C4033]">Cleaning</span>
-                </div>
-                <div className="flex items-center gap-2 mt-1 pt-1 border-t border-gray-100">
-                  <div className="w-3 h-3 rounded-lg bg-white border border-red-500" />
-                  <span className="text-xs text-[#5C4033]">Request</span>
-                </div>
+            {/* Legend */}
+            <div className="absolute bottom-8 left-8 bg-white/90 backdrop-blur rounded-full shadow-lg border border-[#D4AF37]/20 px-6 py-3 flex items-center gap-6 z-10">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-white border border-[#E5E5E5]" />
+                <span className="text-sm text-[#5C4033]">Available</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-white border-2 border-[#2C2C2C]" />
+                <span className="text-sm text-[#5C4033]">Occupied</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-[#F5F2EA] border-dashed border-[#8B4513]/30" />
+                <span className="text-sm text-[#5C4033]">Reserved</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-white border border-[#D4AF37] shadow-[0_0_5px_rgba(212,175,55,0.5)]" />
+                <span className="text-sm text-[#5C4033]">Request</span>
               </div>
             </div>
           </div>
-          {/* Right: Action Panel (Static on Desktop, Slide-over on Mobile) */}
-          <AnimatePresence mode="wait">
-            {(selectedTableId || window.innerWidth >= 768) && (
+
+          {/* Right: Action Panel (Slide-over on mobile, Static on desktop) */}
+          <AnimatePresence>
+            {(selectedTableId || !selectedTableId) && ( // Always show panel on desktop, conditionally on mobile
               <motion.div 
-                className={`
-                  absolute md:relative inset-y-0 right-0 w-full md:w-[350px] bg-white border-l border-[#D4AF37]/20 shadow-xl md:shadow-none z-20 flex flex-col
-                  ${!selectedTableId && window.innerWidth < 768 ? 'translate-x-full' : 'translate-x-0'}
-                `}
+                className={`absolute md:relative right-0 top-0 bottom-0 w-full md:w-[400px] bg-white shadow-[-5px_0_20px_rgba(0,0,0,0.05)] z-20 flex flex-col border-l border-[#F0EAD6] ${!selectedTableId ? 'hidden md:flex' : 'flex'}`}
                 initial={{ x: "100%" }}
                 animate={{ x: 0 }}
                 exit={{ x: "100%" }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
               >
-                {selectedTableId ? (
+                {selectedTable ? (
                   <>
-                    {/* Header */}
-                    <div className="p-4 border-b border-[#F5F2EA] bg-[#FFFBF0] flex justify-between items-start">
+                    {/* Panel Header */}
+                    <div className="p-6 border-b border-[#F0EAD6] bg-[#FFFBF0]">
+                      <div className="flex justify-between items-start mb-4">
                         <div>
-                          <h2 className="font-serif text-2xl text-[#2C2C2C]">Table {tables.find(t => t.id === selectedTableId)?.name}</h2>
-                          <p className="text-[#8B4513] text-sm">Main Dining Room • {tables.find(t => t.id === selectedTableId)?.seats} Guests</p>
+                          <h2 className="font-serif text-3xl text-[#2C2C2C]">{selectedTable.name}</h2>
+                          <div className="flex items-center gap-2 mt-1 text-[#8B4513]">
+                            <Users className="w-4 h-4" />
+                            <span className="text-sm font-medium">{selectedTable.seats} Guests</span>
+                            <span className="text-[#D4AF37]">•</span>
+                            <span className="text-sm font-medium capitalize">{selectedTable.status}</span>
+                          </div>
                         </div>
                         <button 
                           onClick={() => setSelectedTableId(null)}
-                          className="md:hidden p-2 hover:bg-black/5 rounded-full"
+                          className="md:hidden p-2 hover:bg-[#D4AF37]/10 rounded-full text-[#8B4513]"
                         >
-                          <X className="w-5 h-5 text-[#5C4033]" />
+                          <X className="w-5 h-5" />
                         </button>
                       </div>
-                      
-                      <div className="flex gap-2 mb-3">
-                        <div className="flex-1 bg-white border border-[#D4AF37]/20 rounded-lg p-2">
-                          <span className="block text-xs text-[#8B4513] uppercase tracking-wider mb-1 text-center">Status</span>
-                          <select 
-                            className="w-full text-center font-serif text-[#2C2C2C] font-medium bg-transparent border-none focus:ring-0 p-0 text-sm cursor-pointer"
-                            value={tables.find(t => t.id === selectedTableId)?.status}
-                            onChange={(e) => selectedTableId && updateTableStatus(selectedTableId, e.target.value as any)}
+
+                      {/* Quick Actions */}
+                      <div className="grid grid-cols-2 gap-2">
+                        {selectedTable.status === 'available' && (
+                          <button 
+                            className="col-span-2 py-3 bg-[#2C2C2C] text-[#FFFBF0] rounded-xl font-medium hover:bg-[#1a1a1a] transition-colors flex items-center justify-center gap-2"
+                            onClick={() => updateTableStatus(selectedTable.id, 'occupied')}
                           >
-                            <option value="available">Available</option>
-                            <option value="occupied">Occupied</option>
-                            <option value="reserved">Reserved</option>
-                            <option value="cleaning">Cleaning</option>
-                          </select>
-                        </div>
-                        <div className="flex-1 bg-white border border-[#D4AF37]/20 rounded-lg p-2 text-center">
-                          <span className="block text-xs text-[#8B4513] uppercase tracking-wider mb-1">Time</span>
-                          <TableTimer startTime={tables.find(t => t.id === selectedTableId)?.seatedTime} />
-                        </div>
+                            <Users className="w-4 h-4" />
+                            Seat Guests
+                          </button>
+                        )}
+                        {selectedTable.status === 'occupied' && (
+                          <>
+                            <button 
+                              className="py-2 bg-[#FFFBF0] border border-[#D4AF37] text-[#8B4513] rounded-lg text-sm font-medium hover:bg-[#F5F2EA] transition-colors"
+                              onClick={() => updateTableStatus(selectedTable.id, 'cleaning')}
+                            >
+                              Clear Table
+                            </button>
+                            <button 
+                              className={`py-2 border rounded-lg text-sm font-medium transition-colors ${isJoining ? 'bg-[#D4AF37] text-white border-[#D4AF37]' : 'bg-white border-[#D4AF37] text-[#8B4513] hover:bg-[#F5F2EA]'}`}
+                              onClick={() => setIsJoining(!isJoining)}
+                            >
+                              {isJoining ? 'Select Table to Join' : 'Join Tables'}
+                            </button>
+                          </>
+                        )}
+                        {selectedTable.mergedIds && selectedTable.mergedIds.length > 0 && (
+                           <button 
+                              className="col-span-2 py-2 bg-white border border-red-200 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors"
+                              onClick={() => splitTable(selectedTable.id)}
+                            >
+                              Split Table
+                            </button>
+                        )}
+                        {selectedTable.status === 'cleaning' && (
+                          <button 
+                            className="col-span-2 py-3 bg-[#D4AF37] text-white rounded-xl font-medium hover:bg-[#C4A030] transition-colors flex items-center justify-center gap-2"
+                            onClick={() => updateTableStatus(selectedTable.id, 'available')}
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                            Mark Ready
+                          </button>
+                        )}
                       </div>
+                    </div>
 
-                      <button 
-                        className={`w-full py-2 border rounded-lg text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2
-                          ${isJoining 
-                            ? 'bg-[#D4AF37] text-white border-[#D4AF37] animate-pulse' 
-                            : 'bg-white border-[#D4AF37]/30 text-[#8B4513] hover:bg-[#F5F2EA]'
-                          }
-                        `}
-                        onClick={() => setIsJoining(!isJoining)}
-                      >
-                        <Users className="w-4 h-4" />
-                        {isJoining ? 'Tap tables to merge...' : 'Join Table'}
-                      </button>
+                    {/* Scrollable Content */}
+                    <div className="flex-1 overflow-y-auto p-6 space-y-8">
                       
-                      {/* Split Table Button (Only if merged) */}
-                      {selectedTable?.mergedIds && selectedTable.mergedIds.length > 0 && (
-                        <button 
-                          className="w-full mt-2 py-2 border border-red-200 bg-red-50 text-red-600 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-red-100 transition-colors"
-                          onClick={() => {
-                            if (confirm('Split this table back to original arrangement?')) {
-                              splitTable(selectedTable.id);
-                              setIsJoining(false);
-                            }
-                          }}
-                        >
-                          Split Table
-                        </button>
-                      )}
-
-                      {isJoining && (
-                        <p className="text-[10px] text-center text-[#D4AF37] mt-1 font-medium">
-                          Tap another table to merge it into this one
-                        </p>
-                      )}
-
-
-                    {/* Requests & Orders List */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-[#FAFAFA]">
-                      
-                      {/* Active Requests Section */}
+                      {/* Service Requests */}
                       {activeRequests.length > 0 && (
                         <div className="space-y-3">
-                          <h3 className="text-xs font-bold text-[#8B4513] uppercase tracking-wider ml-1">Active Requests</h3>
-                          {activeRequests.map((req) => (
-                            <motion.div 
-                              key={req.id}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="bg-white p-4 rounded-xl border-l-4 border-red-500 shadow-sm"
-                            >
-                              <div className="flex justify-between items-start mb-3">
-                                <div className="flex items-center gap-2">
-                                  {/* @ts-ignore - Types are compatible but TS is strict about string literals */}
-                                  {req.type === 'water' && <GlassWater className="w-4 h-4 text-[#5C4033]" />}
-                                  {req.type === 'cutlery' && <Utensils className="w-4 h-4 text-[#5C4033]" />}
-                                  {/* @ts-ignore - Types are compatible but TS is strict about string literals */}
-                                  {req.type === 'service' && <ChefHat className="w-4 h-4 text-[#5C4033]" />}
-                                  <span className="font-medium text-[#2C2C2C]">{req.details || req.type}</span>
-                                </div>
-                                <span className="text-xs text-gray-400 font-mono">
-                                  {format(new Date(req.timestamp), 'HH:mm')}
-                                </span>
-                              </div>
-                              
-                              <div className="flex gap-2">
-                                {req.status === 'pending' && (
-                                  <button 
-                                    onClick={() => updateServiceRequestStatus(req.id, 'acknowledged')}
-                                    className="flex-1 bg-[#FFFBF0] text-[#8B4513] border border-[#D4AF37]/30 py-2 rounded-lg text-sm font-medium hover:bg-[#F5F2EA] transition-colors"
-                                  >
-                                    Acknowledge
-                                  </button>
-                                )}
-                                <button 
-                                  onClick={() => updateServiceRequestStatus(req.id, 'completed')}
-                                  className="flex-1 bg-[#2C2C2C] text-[#F5F2EA] py-2 rounded-lg text-sm font-medium hover:bg-black transition-colors"
-                                >
-                                  Complete
-                                </button>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Live Orders Section */}
-                      {selectedTableId === '12' && (activeOrders.length > 0 || servedOrders.length > 0) && (
-                        <div className="space-y-3">
                           <h3 className="text-xs font-bold text-[#8B4513] uppercase tracking-wider flex items-center gap-2">
-                            <Utensils className="w-3 h-3" />
-                            Live Orders
+                            <AlertCircle className="w-4 h-4" />
+                            Active Requests
                           </h3>
-                          
-                          {/* Active Orders */}
-                          {activeOrders.map(order => (
-                            <div key={`${order.id}-${order.selectedVariationId}`} className="bg-white rounded-xl p-3 border border-[#E5E5E5] shadow-sm flex justify-between items-center">
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-serif font-medium text-[#2C2C2C]">{order.name}</span>
-                                  <span className="text-xs bg-[#F5F2EA] text-[#8B4513] px-1.5 py-0.5 rounded">x{order.quantity}</span>
+                          {activeRequests.map(req => (
+                            <div key={req.id} className="bg-white border border-[#D4AF37]/30 rounded-xl p-4 shadow-sm flex justify-between items-center animate-in slide-in-from-right-4 duration-300">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-[#FFFBF0] flex items-center justify-center text-[#D4AF37]">
+                                  {req.type === 'bill' ? <span className="font-serif font-bold">£</span> : <Bell className="w-4 h-4" />}
                                 </div>
-                                {order.selectedVariationName && (
-                                  <p className="text-xs text-gray-500">{order.selectedVariationName}</p>
-                                )}
+                                <div>
+                                  <p className="font-medium text-[#2C2C2C] capitalize">{req.type}</p>
+                                  <p className="text-xs text-gray-500">{format(req.timestamp, 'HH:mm')}</p>
+                                </div>
                               </div>
                               <button 
-                                onClick={() => toggleOrderServed(order.id, order.selectedVariationId)}
-                                className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:bg-green-50 hover:border-green-200 hover:text-green-600 transition-colors"
+                                onClick={() => updateServiceRequestStatus(req.id, 'completed')}
+                                className="px-3 py-1.5 bg-[#D4AF37] text-white text-xs font-bold rounded-lg hover:bg-[#C4A030] transition-colors"
                               >
-                                <CheckCircle2 className="w-4 h-4" />
+                                Resolve
                               </button>
                             </div>
                           ))}
+                        </div>
+                      )}
 
-                          {/* Served Orders (Collapsed/Dimmed) */}
-                          {servedOrders.length > 0 && (
-                            <div className="pt-2 space-y-2">
-                              <p className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">Served</p>
-                              {servedOrders.map(order => (
-                                <div key={`${order.id}-${order.selectedVariationId}`} className="bg-gray-50 rounded-lg p-2 border border-gray-100 flex justify-between items-center opacity-60">
-                                  <span className="text-sm text-gray-600 line-through">{order.name} (x{order.quantity})</span>
-                                  <button 
-                                    onClick={() => toggleOrderServed(order.id, order.selectedVariationId)}
-                                    className="text-green-600"
-                                  >
-                                    <CheckCircle2 className="w-4 h-4" />
-                                  </button>
+                      {/* Order Status */}
+                      {tableOrders.length > 0 && (
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <h3 className="text-xs font-bold text-[#8B4513] uppercase tracking-wider flex items-center gap-2">
+                              <Utensils className="w-4 h-4" />
+                              Current Orders
+                            </h3>
+                            <span className="text-xs font-medium text-gray-500">
+                              {servedOrders.length}/{tableOrders.length} Served
+                            </span>
+                          </div>
+
+                          <div className="space-y-2">
+                            {tableOrders.map((item, idx) => (
+                              <div key={`${item.id}-${idx}`} className="flex items-center justify-between group">
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-2 h-2 rounded-full ${item.served ? 'bg-green-500' : 'bg-orange-400'}`} />
+                                  <div>
+                                    <p className={`text-sm font-medium ${item.served ? 'text-gray-400 line-through' : 'text-[#2C2C2C]'}`}>
+                                      {item.quantity}x {item.name}
+                                    </p>
+                                    {item.selectedVariationName && (
+                                      <p className="text-xs text-gray-400">{item.selectedVariationName}</p>
+                                    )}
+                                  </div>
                                 </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Bill Status Section */}
-                      {selectedTableId === '12' && billTotal > 0 && (
-                        <div className="mt-6 bg-[#FFFBF0] rounded-xl p-4 border border-[#D4AF37]/20">
-                          <h3 className="text-xs font-bold text-[#8B4513] uppercase tracking-wider mb-3">Bill Status</h3>
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm text-[#5C4033]">Total</span>
-                            <span className="font-serif font-bold text-lg text-[#2C2C2C]">£{billTotal.toFixed(2)}</span>
-                          </div>
-                          
-                          <div className="flex justify-between items-center mb-2">
-                             <span className="text-sm text-[#5C4033]">Split Type</span>
-                             <span className="text-sm font-medium text-[#2C2C2C] capitalize">
-                               {sharingModel === 'separate' ? `Split (${partySize} ways)` : (sharingModel || 'Standard')}
-                             </span>
+                                <button 
+                                  onClick={() => toggleOrderServed(item.id, item.selectedVariationId)}
+                                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${item.served ? 'text-gray-400 hover:bg-gray-100' : 'text-[#D4AF37] hover:bg-[#FFFBF0]'}`}
+                                >
+                                  {item.served ? 'Undo' : 'Serve'}
+                                </button>
+                              </div>
+                            ))}
                           </div>
 
-                          {sharingModel === 'separate' && partySize && (
-                            <div className="flex justify-between items-center mb-2 pl-2 border-l-2 border-[#D4AF37]/20">
-                              <span className="text-xs text-[#5C4033]">Per Person</span>
-                              <span className="text-sm font-medium text-[#2C2C2C]">£{(billTotal / partySize).toFixed(2)}</span>
+                          {/* Bill Summary */}
+                          <div className="pt-4 border-t border-dashed border-gray-200">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-sm text-gray-500">Subtotal</span>
+                              <span className="text-sm font-medium text-[#2C2C2C]">£{billTotal.toFixed(2)}</span>
                             </div>
-                          )}
-
-                          <div className="flex justify-between items-center mt-3 pt-3 border-t border-[#D4AF37]/10">
-                            <span className="text-sm text-[#5C4033]">Payment Status</span>
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">Open</span>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-500">Service (12.5%)</span>
+                              <span className="text-sm font-medium text-[#2C2C2C]">£{(billTotal * 0.125).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
+                              <span className="font-serif font-bold text-[#2C2C2C]">Total</span>
+                              <span className="font-serif font-bold text-[#D4AF37] text-lg">£{(billTotal * 1.125).toFixed(2)}</span>
+                            </div>
                           </div>
                         </div>
                       )}
 
-                      {/* Completed History */}
-                      {completedRequests.length > 0 && (
-                        <div className="space-y-3 pt-4 border-t border-gray-100">
-                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">History</h3>
-                          {completedRequests.map((req) => (
-                            <div key={req.id} className="bg-white p-3 rounded-lg border border-gray-100 flex justify-between items-center opacity-60">
-                              <span className="text-sm text-gray-600 line-through">{req.details || req.type}</span>
-                              <CheckCircle2 className="w-4 h-4 text-green-500" />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Empty State */}
-                      {activeRequests.length === 0 && activeOrders.length === 0 && servedOrders.length === 0 && completedRequests.length === 0 && (
-                        <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-50">
-                          <div className="w-16 h-16 rounded-full bg-[#F5F2EA] flex items-center justify-center mb-4">
-                            <CheckCircle2 className="w-8 h-8 text-[#D4AF37]" />
-                          </div>
-                          <p className="font-serif text-[#2C2C2C] text-lg">All Clear</p>
-                          <p className="text-sm text-[#5C4033]">No active requests or orders.</p>
+                      {/* Empty State for Orders */}
+                      {tableOrders.length === 0 && (
+                        <div className="text-center py-8 bg-[#F9F9F9] rounded-xl border border-dashed border-gray-200">
+                          <ChefHat className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                          <p className="text-sm text-gray-400">No active orders</p>
                         </div>
                       )}
                     </div>
                   </>
                 ) : (
-                  <div className="flex-1 flex flex-col bg-[#FAFAFA]">
-                    <div className="p-6 border-b border-[#E5E5E5] bg-white">
-                      <h2 className="font-serif text-xl font-bold text-[#2C2C2C]">Shift Activity</h2>
-                      <p className="text-xs text-[#8B4513] uppercase tracking-wider mt-1">Live Feed • {serviceRequests.length} Requests</p>
+                  // Empty State / Dashboard Overview
+                  <div className="flex-1 flex flex-col h-full bg-[#FFFBF0]">
+                    <div className="p-6 border-b border-[#F0EAD6]">
+                      <h2 className="font-serif text-2xl text-[#2C2C2C]">Shift Activity</h2>
+                      <p className="text-sm text-gray-500 mt-1">Live updates from the floor</p>
                     </div>
                     
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                      {serviceRequests.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-[#8B4513]/40">
-                          <Clock className="w-12 h-12 mb-3 opacity-20" />
-                          <p className="text-sm">No activity yet</p>
+                    <div className="flex-1 overflow-y-auto p-6">
+                      {serviceRequests.length > 0 ? (
+                        <div className="space-y-4">
+                          {serviceRequests.map(req => (
+                            <div key={req.id} className="flex gap-4 items-start p-4 bg-white rounded-xl border border-[#F0EAD6] shadow-sm">
+                              <div className="w-10 h-10 rounded-full bg-[#FFFBF0] flex items-center justify-center shrink-0 text-[#D4AF37] font-serif font-bold">
+                                {req.tableNumber}
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex justify-between items-start">
+                                  <p className="font-medium text-[#2C2C2C]">
+                                    Table {req.tableNumber}
+                                    <span className="font-normal text-gray-500 ml-2">requested {req.type}</span>
+                                  </p>
+                                  <span className="text-xs text-gray-400">{format(req.timestamp, 'HH:mm')}</span>
+                                </div>
+                                {req.details && (
+                                  <p className="text-sm text-gray-500 mt-1 bg-[#F9F9F9] p-2 rounded-lg">"{req.details}"</p>
+                                )}
+                                {req.status !== 'completed' && (
+                                  <button 
+                                    onClick={() => {
+                                      setSelectedTableId(tables.find(t => t.name === `T${req.tableNumber}`)?.id || null);
+                                    }}
+                                    className="mt-3 text-xs font-bold text-[#D4AF37] hover:underline flex items-center gap-1"
+                                  >
+                                    View Table <ChevronRight className="w-3 h-3" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       ) : (
-                        serviceRequests.sort((a, b) => b.timestamp - a.timestamp).map((req) => (
-                          <div 
-                            key={req.id}
-                            className="bg-white p-4 rounded-xl border border-[#E5E5E5] shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                            onClick={() => {
-                              // Find table by name (assuming tableNumber matches name without T/B prefix logic for now, or just try to find it)
-                              // The store saves tableNumber as string.
-                              const table = tables.find(t => t.name === `T${req.tableNumber}` || t.name === `B${req.tableNumber}` || t.name === req.tableNumber);
-                              if (table) setSelectedTableId(table.id);
-                            }}
-                          >
-                            <div className="flex justify-between items-start mb-2">
-                              <div className="flex items-center gap-2">
-                                <span className="font-serif font-bold text-[#2C2C2C] bg-[#F5F2EA] px-2 py-1 rounded text-sm">
-                                  {req.tableNumber.startsWith('T') || req.tableNumber.startsWith('B') ? req.tableNumber : `T${req.tableNumber}`}
-                                </span>
-                                <span className="text-xs text-gray-400">
-                                  {format(req.timestamp, 'h:mm a')}
-                                </span>
-                              </div>
-                              <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${
-                                req.status === 'pending' ? 'bg-red-100 text-red-600' :
-                                req.status === 'acknowledged' ? 'bg-yellow-100 text-yellow-700' :
-                                'bg-green-100 text-green-700'
-                              }`}>
-                                {req.status}
-                              </span>
-                            </div>
-                            <p className="text-sm font-medium text-[#5C4033]">
-                              {req.type === 'custom' ? req.details : req.type.charAt(0).toUpperCase() + req.type.slice(1)}
-                            </p>
-                            {req.type !== 'custom' && req.details && (
-                              <p className="text-xs text-gray-500 mt-1">{req.details}</p>
-                            )}
+                        <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                          <div className="w-16 h-16 rounded-full bg-[#F5F2EA] flex items-center justify-center mb-4">
+                            <Bell className="w-6 h-6 text-[#D4AF37]" />
                           </div>
-                        ))
+                          <p className="font-medium text-[#5C4033]">All Quiet</p>
+                          <p className="text-sm mt-1">Waiting for service requests...</p>
+                          <button 
+                            onClick={simulateRequest}
+                            className="mt-6 px-4 py-2 bg-white border border-[#D4AF37] text-[#8B4513] rounded-lg text-sm font-medium hover:bg-[#FFFBF0] transition-colors"
+                          >
+                            Simulate Activity
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -575,7 +533,6 @@ export default function StaffDashboard() {
               </motion.div>
             )}
           </AnimatePresence>
-
         </div>
       </div>
     </div>

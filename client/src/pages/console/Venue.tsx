@@ -339,18 +339,22 @@ export default function ConsoleVenue() {
             </div>
 
             {/* Legend */}
-            <div className="absolute bottom-8 left-8 bg-white rounded-full shadow-lg border border-gray-100 px-6 py-3 flex items-center gap-6">
+            <div className="absolute bottom-8 left-8 bg-white/90 backdrop-blur rounded-full shadow-lg border border-[#D4AF37]/20 px-6 py-3 flex items-center gap-6 z-10">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[#5C4033]" />
-                <span className="text-sm text-gray-600">Available : {currentFloorTables.filter(t => t.status === 'available').length}</span>
+                <div className="w-3 h-3 rounded-full bg-white border border-[#E5E5E5]" />
+                <span className="text-sm text-[#5C4033]">Available</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[#2563EB]" />
-                <span className="text-sm text-gray-600">Dine in : {currentFloorTables.filter(t => t.status === 'occupied').length}</span>
+                <div className="w-3 h-3 rounded-full bg-white border-2 border-[#2C2C2C]" />
+                <span className="text-sm text-[#5C4033]">Occupied</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[#EF4444]" />
-                <span className="text-sm text-gray-600">Reserved : {currentFloorTables.filter(t => t.status === 'reserved').length}</span>
+                <div className="w-3 h-3 rounded-full bg-[#F5F2EA] border-dashed border-[#8B4513]/30" />
+                <span className="text-sm text-[#5C4033]">Reserved</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-white border border-[#D4AF37] shadow-[0_0_5px_rgba(212,175,55,0.5)]" />
+                <span className="text-sm text-[#5C4033]">Request</span>
               </div>
             </div>
           </div>
