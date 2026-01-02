@@ -333,6 +333,29 @@ export const useStore = create<AppState>()(
         };
       }),
 
+      addFloor: () => set((state: AppState) => {
+        const newId = Math.max(...state.floors.map(f => f.id), 0) + 1;
+        return {
+          floors: [...state.floors, { id: newId, name: `${newId}${newId === 2 ? 'nd' : newId === 3 ? 'rd' : 'th'} Floor` }]
+        };
+      }),
+
+      updateFloorName: (id: number, name: string) => set((state: AppState) => ({
+        floors: state.floors.map(f => f.id === id ? { ...f, name } : f)
+      })),
+
+      addTable: (table: Table) => set((state: AppState) => ({
+        tables: [...state.tables, table]
+      })),
+
+      updateTable: (updatedTable: Table) => set((state: AppState) => ({
+        tables: state.tables.map(t => t.id === updatedTable.id ? updatedTable : t)
+      })),
+
+      deleteTable: (tableId: string) => set((state: AppState) => ({
+        tables: state.tables.filter(t => t.id !== tableId)
+      })),
+
       simulateRequest: () => set((state: AppState) => {
         const requestTypes = ['refill', 'cutlery', 'condiment', 'side', 'custom', 'bill'] as const;
         const randomType = requestTypes[Math.floor(Math.random() * requestTypes.length)];
@@ -404,6 +427,18 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'azay-storage',
+      migrate: (persistedState: any, version: number) => {
+        if (version === 0) {
+          // Migration to add floors if missing
+          return {
+            ...persistedState,
+            floors: persistedState.floors || [{ id: 1, name: '1st Floor' }],
+            tables: persistedState.tables || []
+          };
+        }
+        return persistedState;
+      },
+      version: 0,
     }
   )
 );
