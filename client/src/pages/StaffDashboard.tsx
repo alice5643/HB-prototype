@@ -141,7 +141,7 @@ export default function StaffDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#2C2C2C] flex items-center justify-center p-0 md:p-8 overflow-hidden">
+    <div className="staff-dashboard-wrapper min-h-screen bg-[#2C2C2C] flex items-center justify-center p-0 md:p-8 overflow-hidden">
       {/* Tablet Container */}
       <div className="w-full h-full md:w-[1024px] md:h-[768px] bg-[#F5F2EA] md:rounded-[32px] md:shadow-2xl overflow-hidden flex flex-col relative md:border-[12px] md:border-[#1a1a1a]">
         

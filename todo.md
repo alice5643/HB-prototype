@@ -1,3 +1,3 @@
-- [ ] Implement fixed-aspect ratio tablet container for desktop view
-- [ ] Implement pannable/scrollable floor plan for mobile view
-- [ ] Adjust Action Panel to be non-obtrusive (slide-over/bottom sheet) on mobile
+- [ ] Identify and remove global mobile-width constraints for Staff Dashboard
+- [ ] Implement responsive layout wrapper that supports both mobile vertical and tablet horizontal views
+- [ ] Verify pannable map functionality on mobile and desktop

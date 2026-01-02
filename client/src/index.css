@@ -215,15 +215,25 @@
   
   /* Mobile-first constraint wrapper */
   #root {
-    @apply mx-auto min-h-screen w-full max-w-md shadow-2xl overflow-hidden bg-background relative transition-colors duration-500;
-    /* Ensure it looks good on desktop by centering the mobile view */
-    @media (min-width: 768px) {
-      margin-top: 2rem;
-      margin-bottom: 2rem;
-      border-radius: 2rem;
-      border: 8px solid oklch(0.9 0.01 90);
-      height: calc(100vh - 4rem);
-      overflow-y: auto;
+    @apply mx-auto min-h-screen w-full shadow-2xl overflow-hidden bg-background relative transition-colors duration-500;
+    
+    /* Default mobile constraint for most pages */
+    &:not(:has(.staff-dashboard-wrapper)) {
+      @apply max-w-md;
+      
+      @media (min-width: 768px) {
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        border-radius: 2rem;
+        border: 8px solid oklch(0.9 0.01 90);
+        height: calc(100vh - 4rem);
+        overflow-y: auto;
+      }
+    }
+
+    /* Staff Dashboard specific override - Full width/height allowed */
+    &:has(.staff-dashboard-wrapper) {
+      @apply max-w-none h-screen overflow-hidden p-0 m-0 border-0 rounded-none;
     }
   }
   
