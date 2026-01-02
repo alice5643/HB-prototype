@@ -40,7 +40,7 @@ const TableTimer = ({ startTime }: { startTime?: number }) => {
 };
 
 export default function StaffDashboard() {
-  const { serviceRequests, updateServiceRequestStatus, orders, toggleOrderServed, sharingModel, partySize, tables, updateTableStatus, joinTables } = useStore();
+  const { serviceRequests, updateServiceRequestStatus, orders, toggleOrderServed, sharingModel, partySize, tables, updateTableStatus, joinTables, resetTables } = useStore();
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false); // State for join mode
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
@@ -125,8 +125,16 @@ export default function StaffDashboard() {
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
               <span className="text-xs font-medium text-[#5C4033]">Live Service</span>
             </div>
-            <button className="p-2 hover:bg-[#D4AF37]/10 rounded-full transition-colors">
-              <Users className="w-5 h-5 text-[#5C4033]" />
+            <button 
+              className="p-2 hover:bg-[#D4AF37]/10 rounded-full transition-colors text-[#5C4033] text-xs font-medium flex items-center gap-1"
+              onClick={() => {
+                if (confirm('Reset floor plan to default state?')) {
+                  resetTables();
+                  setSelectedTableId(null);
+                }
+              }}
+            >
+              Reset
             </button>
           </div>
         </div>
