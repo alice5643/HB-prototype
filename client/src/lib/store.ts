@@ -112,8 +112,7 @@ export const useStore = create<AppState>()(
       orderStatus: 'pending',
       serviceRequests: [],
       floors: [
-        { id: 1, name: '1st Floor' },
-
+        { id: 1, name: '1st Floor' }
       ],
       tables: [
         // 1st Floor

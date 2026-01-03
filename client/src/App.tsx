@@ -7,7 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Welcome from "./pages/Welcome";
 import MenuList from "./pages/MenuList";
 import Dashboard from "./pages/Dashboard";
-import MenuDiscovery from "./pages/MenuDiscovery";
+import Discovery from "./pages/Discovery";
 import OrderSummary from "./pages/OrderSummary";
 import DiningStatus from "./pages/DiningStatus";
 import Service from "./pages/Service";
@@ -31,7 +31,7 @@ function Router() {
       <Route path={"/"} component={Welcome} />
       <Route path={"/dashboard"} component={DiningStatus} />
       <Route path={"/menus"} component={MenuList} />
-      <Route path={"/discovery"} component={MenuDiscovery} />
+      <Route path={"/discovery"} component={Discovery} />
       <Route path={"/order-summary"} component={OrderSummary} />
       <Route path={"/dining-status"} component={DiningStatus} />
       <Route path={"/service"} component={Service} />

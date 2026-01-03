@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { Utensils, Home, BookOpen, ConciergeBell, Sparkles, Compass, Clock, ArrowRight, GlassWater, HandPlatter } from "lucide-react";
+import { Utensils, Home, BookOpen, ConciergeBell, Sparkles, Compass, Clock, ArrowRight, GlassWater, HandPlatter, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
 import { toast } from "sonner";
@@ -81,6 +81,40 @@ export default function DiningStatus() {
   const nextItems = getNextStepItems();
   const hasActiveOrder = allItems.length > 0;
 
+  // --- Decision Logic for "Help Me Choose" ---
+  const getDecisionContext = () => {
+    const hasFood = starters.length > 0 || mains.length > 0;
+    const hasDrinks = drinks.length > 0;
+
+    if (!hasActiveOrder) {
+      return {
+        title: "Help me choose",
+        subtitle: "Tell us what you like — we’ll suggest a complete order.",
+        icon: Sparkles
+      };
+    } else if (hasFood && !hasDrinks) {
+      return {
+        title: "Fancy a drink?",
+        subtitle: "Find the perfect pairing for your meal.",
+        icon: GlassWater
+      };
+    } else if (hasDrinks && !hasFood) {
+      return {
+        title: "Something to eat?",
+        subtitle: "Shall we add some starters or mains?",
+        icon: Utensils
+      };
+    } else {
+      return {
+        title: "Anything else?",
+        subtitle: "Sides, another round, or perhaps dessert?",
+        icon: ConciergeBell
+      };
+    }
+  };
+
+  const decisionContext = getDecisionContext();
+
   // Service Actions
   const handleServiceRequest = (type: string) => {
     toast.success(`${type} request sent to waiter`);
@@ -145,7 +179,7 @@ export default function DiningStatus() {
         {/* Primary Action Zone */}
         <div className="space-y-4">
           
-          {/* Card 1 — Guided Choice (Primary) */}
+          {/* Card 1 — Guided Choice (Primary) - Context Aware */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -158,12 +192,12 @@ export default function DiningStatus() {
             
             <div className="relative z-10 flex flex-col items-center text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-[#F5F2EA] flex items-center justify-center text-[#D4AF37] mb-1 group-hover:scale-110 transition-transform duration-300">
-                <Sparkles className="w-6 h-6" />
+                <decisionContext.icon className="w-6 h-6" />
               </div>
               
-              <h2 className="font-serif text-xl text-[#2C2C2C] group-hover:text-[#8B4513] transition-colors">Help me choose</h2>
+              <h2 className="font-serif text-xl text-[#2C2C2C] group-hover:text-[#8B4513] transition-colors">{decisionContext.title}</h2>
               <p className="text-sm text-[#5C4033]/80 leading-relaxed max-w-[240px]">
-                Tell us what you like — we’ll suggest something that fits perfectly.
+                {decisionContext.subtitle}
               </p>
             </div>
           </motion.div>
@@ -240,29 +274,42 @@ export default function DiningStatus() {
                 className="bg-white rounded-xl border border-[#E5E5E5] overflow-hidden shadow-sm"
               >
                 <div className="bg-[#F5F2EA] p-3 border-b border-[#E5E5E5] flex justify-between items-center">
-                  <span className="text-sm font-medium text-[#8B4513] uppercase tracking-wider font-serif">
-                    Current Course: {activeSteps.find(s => s.id === currentStep)?.label}
-                  </span>
-                  <div className="flex items-center gap-1 text-xs text-[#5C4033]/70">
-                    <Clock className="w-3 h-3" />
-                    <span>Est. 8-12 mins</span>
-                  </div>
+                  <span className="text-xs font-medium text-[#8B4513] uppercase tracking-wider">Current Course</span>
+                  <span className="text-xs text-[#5C4033]/60">{currentItems.length} items</span>
                 </div>
-                
-                <div className="p-5 space-y-4">
-                  {currentItems.map((item, index) => (
-                    <div key={`${item.id}-${index}`}>
-                      <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 bg-[#F9F9F9] rounded-full flex items-center justify-center flex-shrink-0 border border-[#E5E5E5]">
-                          <Utensils className="w-5 h-5 text-[#D4AF37]" />
+                <div className="p-4 space-y-3">
+                  {currentItems.map((item, idx) => (
+                    <div key={idx} className="flex justify-between items-start">
+                      <div className="flex gap-3">
+                        <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300">
+                              <Utensils className="w-4 h-4" />
+                            </div>
+                          )}
                         </div>
                         <div>
-                          <h3 className="font-serif text-lg text-[#2C2C2C]">{item.name}</h3>
-                          {item.selectedVariationName && <p className="text-xs text-[#5C4033]/70 italic">{item.selectedVariationName}</p>}
-                          <p className="text-xs text-[#5C4033]/70">Qty: {item.quantity}</p>
+                          <p className="font-medium text-[#2C2C2C]">{item.name}</p>
+                          <p className="text-xs text-[#5C4033]/60 line-clamp-1">{item.description}</p>
+                          {item.selectedVariationName && (
+                            <p className="text-xs text-[#8B4513] mt-0.5">{item.selectedVariationName}</p>
+                          )}
                         </div>
                       </div>
-                      {index < currentItems.length - 1 && <div className="h-[1px] bg-[#E5E5E5] w-full my-3" />}
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="text-sm font-medium text-[#2C2C2C]">£{item.price}</span>
+                        {(item as any).served ? (
+                          <span className="text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" /> Served
+                          </span>
+                        ) : (
+                          <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full flex items-center gap-1">
+                            <Clock className="w-3 h-3" /> Preparing
+                          </span>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -275,108 +322,57 @@ export default function DiningStatus() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white/50 rounded-xl border border-[#E5E5E5] overflow-hidden"
+                className="bg-white/50 rounded-xl border border-[#E5E5E5] p-4 flex items-center justify-between"
               >
-                <div className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#F5F5F5] flex items-center justify-center text-[#5C4033]/60">
-                      <ArrowRight className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-[#8B4513] uppercase tracking-wider">Up Next</p>
-                      <p className="text-sm text-[#2C2C2C] font-serif">{nextItems.length} items</p>
-                    </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#F5F2EA] flex items-center justify-center text-[#D4AF37]">
+                    <Clock className="w-5 h-5" />
                   </div>
-                  <div className="flex -space-x-2">
-                    {nextItems.slice(0, 3).map((item, i) => (
-                      <div key={i} className="w-8 h-8 rounded-full bg-white border border-[#E5E5E5] flex items-center justify-center text-[10px] text-[#5C4033] shadow-sm">
-                        {item.name.charAt(0)}
-                      </div>
-                    ))}
-                    {nextItems.length > 3 && (
-                      <div className="w-8 h-8 rounded-full bg-[#F5F2EA] border border-[#E5E5E5] flex items-center justify-center text-[10px] text-[#8B4513] shadow-sm">
-                        +{nextItems.length - 3}
-                      </div>
-                    )}
+                  <div>
+                    <p className="text-xs font-medium text-[#8B4513] uppercase tracking-wider">Up Next</p>
+                    <p className="text-sm text-[#2C2C2C]">{nextItems.length} items preparing</p>
                   </div>
+                </div>
+                <div className="flex -space-x-2">
+                  {nextItems.slice(0, 3).map((item, i) => (
+                    <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-gray-100 overflow-hidden">
+                      {item.image ? (
+                        <img src={item.image} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-300">
+                          <Utensils className="w-3 h-3" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {nextItems.length > 3 && (
+                    <div className="w-8 h-8 rounded-full border-2 border-white bg-[#F5F2EA] flex items-center justify-center text-[10px] font-medium text-[#8B4513]">
+                      +{nextItems.length - 3}
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
 
             {/* Quick Service Actions */}
-            <div className="grid grid-cols-2 gap-4">
-              <button 
-                onClick={() => setActiveDrawer("water")}
-                className="flex items-center justify-center gap-2 p-4 bg-white border border-[#E5E5E5] rounded-xl hover:bg-[#F5F2EA] hover:border-[#D4AF37]/30 transition-all shadow-sm group"
+            <div className="grid grid-cols-2 gap-3">
+              <Button 
+                variant="outline" 
+                className="h-auto py-3 flex flex-col gap-1 border-[#E5E5E5] hover:border-[#D4AF37] hover:bg-[#F5F2EA] hover:text-[#8B4513]"
+                onClick={() => handleServiceRequest("Water Refill")}
               >
-                <div className="w-8 h-8 rounded-full bg-[#F5F5F5] flex items-center justify-center text-[#5C4033] group-hover:bg-white group-hover:text-[#D4AF37] transition-colors">
-                  <span className="text-lg">💧</span>
-                </div>
-                <span className="text-sm font-medium text-[#5C4033] group-hover:text-[#8B4513]">Refill Water</span>
-              </button>
-              <button 
-                onClick={() => setActiveDrawer("waiter")}
-                className="flex items-center justify-center gap-2 p-4 bg-white border border-[#E5E5E5] rounded-xl hover:bg-[#F5F2EA] hover:border-[#D4AF37]/30 transition-all shadow-sm group"
+                <GlassWater className="w-5 h-5 mb-1" />
+                <span className="text-xs font-medium">Refill Water</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-auto py-3 flex flex-col gap-1 border-[#E5E5E5] hover:border-[#D4AF37] hover:bg-[#F5F2EA] hover:text-[#8B4513]"
+                onClick={() => handleServiceRequest("Waiter")}
               >
-                <div className="w-8 h-8 rounded-full bg-[#F5F5F5] flex items-center justify-center text-[#5C4033] group-hover:bg-white group-hover:text-[#D4AF37] transition-colors">
-                  <ConciergeBell className="w-4 h-4" />
-                </div>
-                <span className="text-sm font-medium text-[#5C4033] group-hover:text-[#8B4513]">Call Waiter</span>
-              </button>
+                <HandPlatter className="w-5 h-5 mb-1" />
+                <span className="text-xs font-medium">Call Waiter</span>
+              </Button>
             </div>
-
-            {/* Drawers for Service Actions */}
-            <AnimatePresence>
-              {activeDrawer && (
-                <>
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={() => setActiveDrawer(null)}
-                    className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
-                  />
-                  <motion.div 
-                    initial={{ y: "100%" }}
-                    animate={{ y: 0 }}
-                    exit={{ y: "100%" }}
-                    className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 z-50 shadow-xl border-t border-[#E5E5E5]"
-                  >
-                    <div className="w-12 h-1 bg-[#E5E5E5] rounded-full mx-auto mb-6" />
-                    
-                    {activeDrawer === "water" && (
-                      <div className="space-y-4">
-                        <h3 className="font-serif text-xl text-[#2C2C2C] text-center">Water Service</h3>
-                        <p className="text-center text-[#5C4033]/70 text-sm">Would you like a refill or a fresh bottle?</p>
-                        <div className="grid grid-cols-2 gap-3">
-                          <Button variant="outline" onClick={() => handleServiceRequest("Tap Water Refill")}>Tap Refill</Button>
-                          <Button variant="outline" onClick={() => handleServiceRequest("Sparkling Water")}>Sparkling</Button>
-                          <Button variant="outline" onClick={() => handleServiceRequest("Still Water Bottle")}>Still Bottle</Button>
-                          <Button variant="outline" onClick={() => handleServiceRequest("Ice Bucket")}>Ice Bucket</Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {activeDrawer === "waiter" && (
-                      <div className="space-y-4">
-                        <h3 className="font-serif text-xl text-[#2C2C2C] text-center">Call Waiter</h3>
-                        <div className="space-y-3">
-                          <Button className="w-full justify-start" variant="outline" onClick={() => handleServiceRequest("Check Request")}>
-                            <span className="mr-2">🧾</span> Request Check
-                          </Button>
-                          <Button className="w-full justify-start" variant="outline" onClick={() => handleServiceRequest("Menu Question")}>
-                            <span className="mr-2">❓</span> Question about Menu
-                          </Button>
-                          <Button className="w-full justify-start" variant="outline" onClick={() => handleServiceRequest("General Assistance")}>
-                            <span className="mr-2">👋</span> General Assistance
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
 
           </motion.div>
         )}
