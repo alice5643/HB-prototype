@@ -1,12 +1,64 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Utensils, Home, BookOpen, ConciergeBell, Sparkles, Compass } from "lucide-react";
+import { Utensils, Home, BookOpen, ConciergeBell, Sparkles, Compass, Clock } from "lucide-react";
 import { useStore } from "@/lib/store";
 
 export default function DiningStatus() {
   const [, setLocation] = useLocation();
-  const { tableNumber, partySize } = useStore();
+  const { tableNumber, partySize, orders, cart } = useStore();
+
+  // --- Dining Status Logic ---
+  // Combine orders and cart for timeline generation
+  const allItems = [...orders, ...cart];
+
+  // Filter items by category - Merge sides into mains, case-insensitive
+  const starters = allItems.filter(item => item.category.toLowerCase() === "starters");
+  const mains = allItems.filter(item => ["mains", "sides"].includes(item.category.toLowerCase()));
+  const desserts = allItems.filter(item => item.category.toLowerCase() === "desserts");
+  const drinks = allItems.filter(item => ["cocktails", "wine", "drinks"].includes(item.category.toLowerCase()));
+
+  // Determine initial step based on what's ordered
+  const [currentStep, setCurrentStep] = useState(() => {
+    if (starters.length > 0) return "starters";
+    if (mains.length > 0) return "mains";
+    if (desserts.length > 0) return "desserts";
+    return "finish";
+  });
+
+  // Build dynamic steps
+  const steps = [
+    ...(starters.length > 0 ? [{ id: "starters", label: "Starters" }] : []),
+    ...(drinks.length > 0 ? [{ id: "drinks", label: "Drinks" }] : []),
+    ...(mains.length > 0 ? [{ id: "mains", label: "Mains" }] : []),
+    ...(desserts.length > 0 ? [{ id: "dessert", label: "Dessert" }] : []),
+    { id: "finish", label: "Finish" },
+  ];
+
+  const activeSteps = steps.length > 1 ? steps : [{ id: "finish", label: "Finish" }];
+
+  const getStepStatus = (stepId: string) => {
+    const stepIds = activeSteps.map(s => s.id);
+    const currentIndex = stepIds.indexOf(currentStep);
+    const stepIndex = stepIds.indexOf(stepId);
+    
+    if (stepIndex < currentIndex) return "completed";
+    if (stepIndex === currentIndex) return "active";
+    return "pending";
+  };
+
+  const getCurrentItems = () => {
+    switch (currentStep) {
+      case "starters": return starters;
+      case "mains": return mains;
+      case "dessert": return desserts;
+      case "drinks": return drinks;
+      default: return [];
+    }
+  };
+
+  const currentItems = getCurrentItems();
+  const hasActiveOrder = allItems.length > 0;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F9F9F9] relative">
@@ -45,24 +97,29 @@ export default function DiningStatus() {
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col p-6 space-y-8 max-w-md mx-auto w-full">
+      <div className="flex-1 flex flex-col p-6 space-y-8 max-w-md mx-auto w-full pb-24">
         
         {/* Welcome + Table Context */}
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-2 mt-8"
+          className="text-center space-y-2 mt-4"
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F5F2EA] border border-[#D4AF37]/20 text-xs font-medium text-[#8B4513] uppercase tracking-wider">
             <span>Table {tableNumber}</span>
             <span className="w-1 h-1 rounded-full bg-[#D4AF37]" />
             <span>{partySize || 2} Guests</span>
           </div>
-          <h1 className="font-serif text-3xl text-[#2C2C2C]">You’re all set — take your time.</h1>
+          <h1 className="font-serif text-3xl text-[#2C2C2C]">
+            {hasActiveOrder ? "Enjoy your meal." : "You’re all set — take your time."}
+          </h1>
         </motion.div>
 
-        {/* Primary Action Zone */}
-        <div className="space-y-4 mt-8">
+        {/* Primary Action Zone (Only show if no active order, or always show as quick actions?) 
+            Let's keep it always visible but maybe smaller if order exists? 
+            For now, keeping full size as requested to "add this" to the screen.
+        */}
+        <div className="space-y-4">
           
           {/* Card 1 — Guided Choice (Primary) */}
           <motion.div 
@@ -108,8 +165,88 @@ export default function DiningStatus() {
               →
             </div>
           </motion.div>
-
         </div>
+
+        {/* --- Dining Status Section (Only visible if there are orders) --- */}
+        {hasActiveOrder && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="space-y-6 pt-6 border-t border-[#E5E5E5]"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-medium text-[#8B4513] uppercase tracking-wider">Your Meal Progress</span>
+              <div className="h-[1px] flex-1 bg-[#E5E5E5]" />
+            </div>
+
+            {/* Ritual Progress Timeline */}
+            <div className="flex justify-between items-center px-2 relative py-4 overflow-x-auto">
+              <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-[2px] bg-[#D4AF37]/20 -z-10 min-w-[300px]" />
+              {activeSteps.map((step) => {
+                const status = getStepStatus(step.id);
+                return (
+                  <div 
+                    key={step.id} 
+                    className="flex flex-col items-center gap-2 cursor-pointer group min-w-[60px]"
+                    onClick={() => setCurrentStep(step.id)}
+                  >
+                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center z-10 transition-all shadow-sm
+                      ${status === 'completed' ? 'bg-[#D4AF37] border-[#D4AF37] text-white' : 
+                        status === 'active' ? 'bg-white border-[#D4AF37] ring-4 ring-[#D4AF37]/10 scale-110' : 'bg-white border-[#D4AF37]/30 text-[#5C4033]/50'}`}
+                    >
+                      {status === 'completed' && <span className="text-xs">✓</span>}
+                      {status === 'active' && <div className="w-2 h-2 bg-[#D4AF37] rounded-full" />}
+                      {status === 'pending' && <span className="text-[10px] opacity-50">•</span>}
+                    </div>
+                    <span className={`text-[10px] font-serif font-medium tracking-wide transition-colors ${status === 'active' ? 'text-[#8B4513]' : 'text-[#5C4033]/60'}`}>
+                      {step.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Current Course Card */}
+            {currentStep !== 'finish' && currentItems.length > 0 && (
+              <motion.div 
+                key={currentStep}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-xl border border-[#E5E5E5] overflow-hidden shadow-sm"
+              >
+                <div className="bg-[#F5F2EA] p-3 border-b border-[#E5E5E5] flex justify-between items-center">
+                  <span className="text-sm font-medium text-[#8B4513] uppercase tracking-wider font-serif">
+                    Current Course: {activeSteps.find(s => s.id === currentStep)?.label}
+                  </span>
+                  <div className="flex items-center gap-1 text-xs text-[#5C4033]/70">
+                    <Clock className="w-3 h-3" />
+                    <span>Est. 8-12 mins</span>
+                  </div>
+                </div>
+                
+                <div className="p-5 space-y-4">
+                  {currentItems.map((item, index) => (
+                    <div key={`${item.id}-${index}`}>
+                      <div className="flex items-start gap-4">
+                        <div className="w-10 h-10 bg-[#F9F9F9] rounded-full flex items-center justify-center flex-shrink-0 border border-[#E5E5E5]">
+                          <Utensils className="w-5 h-5 text-[#D4AF37]" />
+                        </div>
+                        <div>
+                          <h3 className="font-serif text-lg text-[#2C2C2C]">{item.name}</h3>
+                          {item.selectedVariationName && <p className="text-xs text-[#5C4033]/70 italic">{item.selectedVariationName}</p>}
+                          <p className="text-xs text-[#5C4033]/70">Qty: {item.quantity}</p>
+                        </div>
+                      </div>
+                      {index < currentItems.length - 1 && <div className="h-[1px] bg-[#E5E5E5] w-full my-3" />}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+
       </div>
     </div>
   );
