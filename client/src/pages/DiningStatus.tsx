@@ -1,13 +1,17 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Utensils, Home, BookOpen, ConciergeBell, Sparkles, Compass, Clock, ArrowRight, GlassWater, HandPlatter } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
 import { toast } from "sonner";
 
 export default function DiningStatus() {
   const [, setLocation] = useLocation();
   const { tableNumber, partySize, orders, cart, addToCart } = useStore();
+  
+  // Drawer States
+  const [activeDrawer, setActiveDrawer] = useState<string | null>(null);
 
   // --- Dining Status Logic ---
   // Combine orders and cart for timeline generation
@@ -80,10 +84,7 @@ export default function DiningStatus() {
   // Service Actions
   const handleServiceRequest = (type: string) => {
     toast.success(`${type} request sent to waiter`);
-  };
-
-  const handleRefill = () => {
-    toast.success("Water refill requested");
+    setActiveDrawer(null);
   };
 
   return (
@@ -305,20 +306,77 @@ export default function DiningStatus() {
             {/* Quick Service Actions */}
             <div className="grid grid-cols-2 gap-4">
               <button 
-                onClick={() => handleRefill()}
+                onClick={() => setActiveDrawer("water")}
                 className="flex items-center justify-center gap-2 p-4 bg-white border border-[#E5E5E5] rounded-xl hover:bg-[#F5F2EA] hover:border-[#D4AF37]/30 transition-all shadow-sm group"
               >
-                <GlassWater className="w-5 h-5 text-[#5C4033] group-hover:text-[#D4AF37] transition-colors" />
+                <div className="w-8 h-8 rounded-full bg-[#F5F5F5] flex items-center justify-center text-[#5C4033] group-hover:bg-white group-hover:text-[#D4AF37] transition-colors">
+                  <span className="text-lg">💧</span>
+                </div>
                 <span className="text-sm font-medium text-[#5C4033] group-hover:text-[#8B4513]">Refill Water</span>
               </button>
               <button 
-                onClick={() => handleServiceRequest("Waiter")}
+                onClick={() => setActiveDrawer("waiter")}
                 className="flex items-center justify-center gap-2 p-4 bg-white border border-[#E5E5E5] rounded-xl hover:bg-[#F5F2EA] hover:border-[#D4AF37]/30 transition-all shadow-sm group"
               >
-                <HandPlatter className="w-5 h-5 text-[#5C4033] group-hover:text-[#D4AF37] transition-colors" />
+                <div className="w-8 h-8 rounded-full bg-[#F5F5F5] flex items-center justify-center text-[#5C4033] group-hover:bg-white group-hover:text-[#D4AF37] transition-colors">
+                  <ConciergeBell className="w-4 h-4" />
+                </div>
                 <span className="text-sm font-medium text-[#5C4033] group-hover:text-[#8B4513]">Call Waiter</span>
               </button>
             </div>
+
+            {/* Drawers for Service Actions */}
+            <AnimatePresence>
+              {activeDrawer && (
+                <>
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setActiveDrawer(null)}
+                    className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+                  />
+                  <motion.div 
+                    initial={{ y: "100%" }}
+                    animate={{ y: 0 }}
+                    exit={{ y: "100%" }}
+                    className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 z-50 shadow-xl border-t border-[#E5E5E5]"
+                  >
+                    <div className="w-12 h-1 bg-[#E5E5E5] rounded-full mx-auto mb-6" />
+                    
+                    {activeDrawer === "water" && (
+                      <div className="space-y-4">
+                        <h3 className="font-serif text-xl text-[#2C2C2C] text-center">Water Service</h3>
+                        <p className="text-center text-[#5C4033]/70 text-sm">Would you like a refill or a fresh bottle?</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <Button variant="outline" onClick={() => handleServiceRequest("Tap Water Refill")}>Tap Refill</Button>
+                          <Button variant="outline" onClick={() => handleServiceRequest("Sparkling Water")}>Sparkling</Button>
+                          <Button variant="outline" onClick={() => handleServiceRequest("Still Water Bottle")}>Still Bottle</Button>
+                          <Button variant="outline" onClick={() => handleServiceRequest("Ice Bucket")}>Ice Bucket</Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeDrawer === "waiter" && (
+                      <div className="space-y-4">
+                        <h3 className="font-serif text-xl text-[#2C2C2C] text-center">Call Waiter</h3>
+                        <div className="space-y-3">
+                          <Button className="w-full justify-start" variant="outline" onClick={() => handleServiceRequest("Check Request")}>
+                            <span className="mr-2">🧾</span> Request Check
+                          </Button>
+                          <Button className="w-full justify-start" variant="outline" onClick={() => handleServiceRequest("Menu Question")}>
+                            <span className="mr-2">❓</span> Question about Menu
+                          </Button>
+                          <Button className="w-full justify-start" variant="outline" onClick={() => handleServiceRequest("General Assistance")}>
+                            <span className="mr-2">👋</span> General Assistance
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
 
           </motion.div>
         )}
