@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Utensils, Home, BookOpen, ConciergeBell, Sparkles, Compass, Clock } from "lucide-react";
+import { Utensils, Home, BookOpen, ConciergeBell, Sparkles, Compass, Clock, ArrowRight, GlassWater, HandPlatter } from "lucide-react";
 import { useStore } from "@/lib/store";
+import { toast } from "sonner";
 
 export default function DiningStatus() {
   const [, setLocation] = useLocation();
-  const { tableNumber, partySize, orders, cart } = useStore();
+  const { tableNumber, partySize, orders, cart, addToCart } = useStore();
 
   // --- Dining Status Logic ---
   // Combine orders and cart for timeline generation
@@ -57,8 +58,33 @@ export default function DiningStatus() {
     }
   };
 
+  const getNextStepItems = () => {
+    const stepIds = activeSteps.map(s => s.id);
+    const currentIndex = stepIds.indexOf(currentStep);
+    if (currentIndex >= stepIds.length - 1) return null;
+    
+    const nextStepId = stepIds[currentIndex + 1];
+    switch (nextStepId) {
+      case "starters": return starters;
+      case "mains": return mains;
+      case "dessert": return desserts;
+      case "drinks": return drinks;
+      default: return null;
+    }
+  };
+
   const currentItems = getCurrentItems();
+  const nextItems = getNextStepItems();
   const hasActiveOrder = allItems.length > 0;
+
+  // Service Actions
+  const handleServiceRequest = (type: string) => {
+    toast.success(`${type} request sent to waiter`);
+  };
+
+  const handleRefill = () => {
+    toast.success("Water refill requested");
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F9F9F9] relative">
@@ -115,10 +141,7 @@ export default function DiningStatus() {
           </h1>
         </motion.div>
 
-        {/* Primary Action Zone (Only show if no active order, or always show as quick actions?) 
-            Let's keep it always visible but maybe smaller if order exists? 
-            For now, keeping full size as requested to "add this" to the screen.
-        */}
+        {/* Primary Action Zone */}
         <div className="space-y-4">
           
           {/* Card 1 — Guided Choice (Primary) */}
@@ -244,6 +267,59 @@ export default function DiningStatus() {
                 </div>
               </motion.div>
             )}
+
+            {/* Up Next Card */}
+            {nextItems && nextItems.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white/50 rounded-xl border border-[#E5E5E5] overflow-hidden"
+              >
+                <div className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-[#F5F5F5] flex items-center justify-center text-[#5C4033]/60">
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-[#8B4513] uppercase tracking-wider">Up Next</p>
+                      <p className="text-sm text-[#2C2C2C] font-serif">{nextItems.length} items</p>
+                    </div>
+                  </div>
+                  <div className="flex -space-x-2">
+                    {nextItems.slice(0, 3).map((item, i) => (
+                      <div key={i} className="w-8 h-8 rounded-full bg-white border border-[#E5E5E5] flex items-center justify-center text-[10px] text-[#5C4033] shadow-sm">
+                        {item.name.charAt(0)}
+                      </div>
+                    ))}
+                    {nextItems.length > 3 && (
+                      <div className="w-8 h-8 rounded-full bg-[#F5F2EA] border border-[#E5E5E5] flex items-center justify-center text-[10px] text-[#8B4513] shadow-sm">
+                        +{nextItems.length - 3}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Quick Service Actions */}
+            <div className="grid grid-cols-2 gap-4">
+              <button 
+                onClick={() => handleRefill()}
+                className="flex items-center justify-center gap-2 p-4 bg-white border border-[#E5E5E5] rounded-xl hover:bg-[#F5F2EA] hover:border-[#D4AF37]/30 transition-all shadow-sm group"
+              >
+                <GlassWater className="w-5 h-5 text-[#5C4033] group-hover:text-[#D4AF37] transition-colors" />
+                <span className="text-sm font-medium text-[#5C4033] group-hover:text-[#8B4513]">Refill Water</span>
+              </button>
+              <button 
+                onClick={() => handleServiceRequest("Waiter")}
+                className="flex items-center justify-center gap-2 p-4 bg-white border border-[#E5E5E5] rounded-xl hover:bg-[#F5F2EA] hover:border-[#D4AF37]/30 transition-all shadow-sm group"
+              >
+                <HandPlatter className="w-5 h-5 text-[#5C4033] group-hover:text-[#D4AF37] transition-colors" />
+                <span className="text-sm font-medium text-[#5C4033] group-hover:text-[#8B4513]">Call Waiter</span>
+              </button>
+            </div>
+
           </motion.div>
         )}
 
