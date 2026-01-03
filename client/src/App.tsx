@@ -29,7 +29,7 @@ function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Welcome} />
-      <Route path={"/dashboard"} component={Dashboard} />
+      <Route path={"/dashboard"} component={DiningStatus} />
       <Route path={"/menus"} component={MenuList} />
       <Route path={"/discovery"} component={MenuDiscovery} />
       <Route path={"/order-summary"} component={OrderSummary} />

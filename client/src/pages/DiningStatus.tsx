@@ -1,175 +1,34 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Utensils, Clock, Home, BookOpen, ConciergeBell, ArrowRight, Plus, X, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { motion } from "framer-motion";
+import { Utensils, Home, BookOpen, ConciergeBell, Sparkles, Compass } from "lucide-react";
 import { useStore } from "@/lib/store";
-import { toast } from "sonner";
 
 export default function DiningStatus() {
   const [, setLocation] = useLocation();
-  const { orders, cart, addToCart } = useStore();
-  
-  // Drawer States
-  const [activeDrawer, setActiveDrawer] = useState<string | null>(null);
-  const [customRequest, setCustomRequest] = useState("");
-  const [condimentRequest, setCondimentRequest] = useState("");
-
-  // Combine orders and cart for timeline generation
-  const allItems = [...orders, ...cart];
-
-  // Filter items by category - Merge sides into mains, case-insensitive
-  const starters = allItems.filter(item => item.category.toLowerCase() === "starters");
-  const mains = allItems.filter(item => ["mains", "sides"].includes(item.category.toLowerCase()));
-  const desserts = allItems.filter(item => item.category.toLowerCase() === "desserts");
-  const drinks = allItems.filter(item => ["cocktails", "wine", "drinks"].includes(item.category.toLowerCase()));
-
-  // Determine initial step based on what's ordered
-  const [currentStep, setCurrentStep] = useState(() => {
-    if (starters.length > 0) return "starters";
-    if (mains.length > 0) return "mains";
-    if (desserts.length > 0) return "desserts";
-    return "finish";
-  });
-
-  // Build dynamic steps
-  const steps = [
-    ...(starters.length > 0 ? [{ id: "starters", label: "Starters" }] : []),
-    ...(drinks.length > 0 ? [{ id: "drinks", label: "Drinks" }] : []),
-    ...(mains.length > 0 ? [{ id: "mains", label: "Mains" }] : []),
-    ...(desserts.length > 0 ? [{ id: "dessert", label: "Dessert" }] : []),
-    { id: "finish", label: "Finish" },
-  ];
-
-  const activeSteps = steps.length > 1 ? steps : [{ id: "finish", label: "Finish" }];
-
-  const getStepStatus = (stepId: string) => {
-    const stepIds = activeSteps.map(s => s.id);
-    const currentIndex = stepIds.indexOf(currentStep);
-    const stepIndex = stepIds.indexOf(stepId);
-    
-    if (stepIndex < currentIndex) return "completed";
-    if (stepIndex === currentIndex) return "active";
-    return "pending";
-  };
-
-  const getCurrentItems = () => {
-    switch (currentStep) {
-      case "starters": return starters;
-      case "mains": return mains;
-      case "dessert": return desserts;
-      case "drinks": return drinks;
-      default: return [];
-    }
-  };
-
-  const getNextStepItems = () => {
-    const stepIds = activeSteps.map(s => s.id);
-    const currentIndex = stepIds.indexOf(currentStep);
-    if (currentIndex >= stepIds.length - 1) return null;
-    
-    const nextStepId = stepIds[currentIndex + 1];
-    switch (nextStepId) {
-      case "starters": return starters;
-      case "mains": return mains;
-      case "dessert": return desserts;
-      case "drinks": return drinks;
-      default: return null;
-    }
-  };
-
-  const currentItems = getCurrentItems();
-  const nextItems = getNextStepItems();
-
-  const getNextStepLabel = () => {
-    const stepIds = activeSteps.map(s => s.id);
-    const currentIndex = stepIds.indexOf(currentStep);
-    
-    if (currentIndex >= stepIds.length - 1) return null;
-    
-    const nextStepId = stepIds[currentIndex + 1];
-    
-    if (nextStepId === 'finish') return "Bill";
-    
-    const nextStep = activeSteps.find(s => s.id === nextStepId);
-    return nextStep ? nextStep.label : "Next Course";
-  };
-
-  const handleReadyForNext = () => {
-    const stepIds = activeSteps.map(s => s.id);
-    const currentIndex = stepIds.indexOf(currentStep);
-    
-    if (currentIndex < stepIds.length - 1) {
-      const nextStepId = stepIds[currentIndex + 1];
-      setCurrentStep(nextStepId);
-      if (nextStepId === 'finish') {
-        setLocation("/payment");
-      }
-    }
-  };
-
-  const nextLabel = getNextStepLabel();
-
-  // Service Actions
-  const handleRefill = (drinkName: string) => {
-    addToCart({
-      id: Math.random().toString(), // Mock ID
-      name: drinkName,
-      price: drinkName === "Still Water" || drinkName === "Sparkling Water" ? 0 : 5, // Mock price
-      description: "Refill request",
-      category: "drinks",
-      image: "",
-      tags: []
-    });
-    toast.success(`${drinkName} added to order`);
-    setActiveDrawer(null);
-  };
-
-  const handleSideOrder = (sideName: string) => {
-    addToCart({
-      id: Math.random().toString(),
-      name: sideName,
-      price: 6,
-      description: "Side order",
-      category: "sides",
-      image: "",
-      tags: []
-    });
-    toast.success(`${sideName} added to order`);
-    setActiveDrawer(null);
-  };
-
-  const handleServiceRequest = (type: string, detail?: string) => {
-    toast.success(`${type} request sent to waiter`);
-    if (detail) console.log(detail);
-    setActiveDrawer(null);
-    setCustomRequest("");
-    setCondimentRequest("");
-  };
+  const { tableNumber, partySize } = useStore();
 
   return (
-    <div className="min-h-screen flex flex-col bg-background relative">
+    <div className="min-h-screen flex flex-col bg-[#F9F9F9] relative">
       {/* Top Navigation */}
-      <div className="bg-background/95 backdrop-blur-md border-b border-primary/20 px-6 py-4 flex justify-between items-center sticky top-0 z-30 shadow-sm">
+      <div className="bg-white/95 backdrop-blur-md border-b border-[#E5E5E5] px-6 py-4 flex justify-between items-center sticky top-0 z-30 shadow-sm">
         <div className="flex items-center gap-6">
           <button 
-            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            className="flex items-center gap-2 text-sm font-medium text-[#8B4513] transition-colors"
             onClick={() => setLocation("/dashboard")}
           >
             <Home className="w-4 h-4" />
             Home
           </button>
           <button 
-            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            className="flex items-center gap-2 text-sm font-medium text-[#5C4033] hover:text-[#8B4513] transition-colors"
             onClick={() => setLocation("/menus")}
           >
             <BookOpen className="w-4 h-4" />
             Menu
           </button>
           <button 
-            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            className="flex items-center gap-2 text-sm font-medium text-[#5C4033] hover:text-[#8B4513] transition-colors"
             onClick={() => setLocation("/service")}
           >
             <ConciergeBell className="w-4 h-4" />
@@ -178,289 +37,80 @@ export default function DiningStatus() {
         </div>
         
         <button 
-          className="relative p-2 hover:bg-secondary rounded-full transition-colors border border-transparent hover:border-primary/20"
+          className="relative p-2 hover:bg-[#F5F2EA] rounded-full transition-colors border border-transparent hover:border-[#D4AF37]/20"
           onClick={() => setLocation("/dining-status")}
         >
-          <Utensils className="w-5 h-5 text-primary" />
+          <Utensils className="w-5 h-5 text-[#D4AF37]" />
           <span className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full border border-white"></span>
         </button>
       </div>
 
-      {/* Status Bar */}
-      <div className="bg-white/50 border-b border-primary/10 px-6 py-2 flex justify-center items-center shadow-sm">
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground text-xs uppercase tracking-wider font-serif">Status:</span>
-          <span className="font-medium text-gold text-sm">Dining in Progress</span>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-6 pb-24 space-y-8">
-        {/* Ritual Progress */}
-        <div className="space-y-4">
-          <div className="flex justify-between items-center px-2 relative py-4 overflow-x-auto">
-            <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-[2px] bg-primary/20 -z-10 min-w-[300px]" />
-            {activeSteps.map((step) => {
-              const status = getStepStatus(step.id);
-              return (
-                <div 
-                  key={step.id} 
-                  className="flex flex-col items-center gap-2 cursor-pointer group min-w-[60px]"
-                  onClick={() => setCurrentStep(step.id)}
-                >
-                  <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center z-10 transition-all shadow-sm
-                    ${status === 'completed' ? 'bg-primary border-primary text-primary-foreground' : 
-                      status === 'active' ? 'bg-white border-primary ring-4 ring-primary/10 scale-110' : 'bg-white border-primary/30 text-muted-foreground'}`}
-                  >
-                    {status === 'completed' && <span className="text-xs">✓</span>}
-                    {status === 'active' && <div className="w-2 h-2 bg-primary rounded-full" />}
-                    {status === 'pending' && <span className="text-[10px] opacity-50">•</span>}
-                  </div>
-                  <span className={`text-[10px] font-serif font-medium tracking-wide transition-colors ${status === 'active' ? 'text-primary' : 'text-muted-foreground'}`}>
-                    {step.label}
-                  </span>
-                </div>
-              );
-            })}
+      <div className="flex-1 flex flex-col p-6 space-y-8 max-w-md mx-auto w-full">
+        
+        {/* Welcome + Table Context */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center space-y-2 mt-8"
+        >
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F5F2EA] border border-[#D4AF37]/20 text-xs font-medium text-[#8B4513] uppercase tracking-wider">
+            <span>Table {tableNumber}</span>
+            <span className="w-1 h-1 rounded-full bg-[#D4AF37]" />
+            <span>{partySize || 2} Guests</span>
           </div>
-        </div>
+          <h1 className="font-serif text-3xl text-[#2C2C2C]">You’re all set — take your time.</h1>
+        </motion.div>
 
-        {/* Current Course Card */}
-        {currentStep !== 'finish' && currentItems.length > 0 ? (
+        {/* Primary Action Zone */}
+        <div className="space-y-4 mt-8">
+          
+          {/* Card 1 — Guided Choice (Primary) */}
           <motion.div 
-            key={currentStep}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="card-paper overflow-hidden"
+            transition={{ delay: 0.1 }}
+            onClick={() => setLocation("/discovery")}
+            className="group relative overflow-hidden bg-white rounded-2xl p-6 cursor-pointer shadow-[0_4px_20px_-4px_rgba(212,175,55,0.15)] border border-[#D4AF37]/30 hover:border-[#D4AF37] transition-all duration-300 hover:shadow-[0_8px_30px_-4px_rgba(212,175,55,0.25)]"
           >
-            <div className="bg-primary/5 p-3 border-b border-primary/10 flex justify-between items-center">
-              <span className="text-sm font-medium text-gold uppercase tracking-wider font-serif">Current Course: {activeSteps.find(s => s.id === currentStep)?.label}</span>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="w-3 h-3" />
-                <span>Est. 8-12 mins</span>
-              </div>
-            </div>
+            {/* Soft Glow Background */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-3xl -mr-10 -mt-10 transition-all group-hover:bg-[#D4AF37]/10" />
             
-            <div className="p-6 space-y-6">
-              {currentItems.map((item, index) => (
-                <div key={`${item.id}-${index}`}>
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center flex-shrink-0 border border-primary/20 shadow-inner">
-                      <Utensils className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-serif text-xl text-foreground">{item.name}</h3>
-                      {item.selectedVariationName && <p className="text-sm text-muted-foreground italic">{item.selectedVariationName}</p>}
-                      <p className="text-sm text-muted-foreground italic">Qty: {item.quantity}</p>
-                    </div>
-                  </div>
-                  {index < currentItems.length - 1 && <div className="h-[1px] bg-primary/10 w-full my-4" />}
-                </div>
-              ))}
+            <div className="relative z-10 flex flex-col items-center text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-[#F5F2EA] flex items-center justify-center text-[#D4AF37] mb-1 group-hover:scale-110 transition-transform duration-300">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              
+              <h2 className="font-serif text-xl text-[#2C2C2C] group-hover:text-[#8B4513] transition-colors">Help me choose</h2>
+              <p className="text-sm text-[#5C4033]/80 leading-relaxed max-w-[240px]">
+                Tell us what you like — we’ll suggest something that fits perfectly.
+              </p>
             </div>
           </motion.div>
-        ) : currentStep !== 'finish' ? (
-           <div className="card-paper p-6 text-center text-muted-foreground italic">
-             No items ordered for this course.
-           </div>
-        ) : null}
 
-        {/* Service Actions Grid */}
-        <div className="space-y-4">
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider font-serif text-center">Quick Service</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" onClick={() => setActiveDrawer("refill")} className="h-14 justify-start gap-3 border-primary/30 hover:border-primary hover:bg-primary/5 shadow-sm">
-              <span className="text-xl">🍷</span>
-              <span className="font-serif">Refill</span>
-            </Button>
-            <Button variant="outline" onClick={() => setActiveDrawer("sides")} className="h-14 justify-start gap-3 border-primary/30 hover:border-primary hover:bg-primary/5 shadow-sm">
-              <span className="text-xl">🥖</span>
-              <span className="font-serif">More Bread/Sides</span>
-            </Button>
-            <Button variant="outline" onClick={() => setActiveDrawer("condiments")} className="h-14 justify-start gap-3 border-primary/30 hover:border-primary hover:bg-primary/5 shadow-sm">
-              <span className="text-xl">🧂</span>
-              <span className="font-serif">Condiments</span>
-            </Button>
-            <Button variant="outline" onClick={() => setActiveDrawer("cutlery")} className="h-14 justify-start gap-3 border-primary/30 hover:border-primary hover:bg-primary/5 shadow-sm">
-              <span className="text-xl">🍴</span>
-              <span className="font-serif">New Cutlery</span>
-            </Button>
-            <Button variant="outline" onClick={() => handleServiceRequest("Ice Bucket")} className="h-14 justify-start gap-3 border-primary/30 hover:border-primary hover:bg-primary/5 shadow-sm">
-              <span className="text-xl">🧊</span>
-              <span className="font-serif">Ice Bucket</span>
-            </Button>
-            <Button variant="outline" onClick={() => handleServiceRequest("Photo Assist")} className="h-14 justify-start gap-3 border-primary/30 hover:border-primary hover:bg-primary/5 shadow-sm">
-              <Camera className="w-5 h-5 text-primary" />
-              <span className="font-serif">Photo Moment</span>
-            </Button>
-            <Button variant="outline" onClick={() => setActiveDrawer("custom")} className="col-span-2 h-14 justify-center gap-3 border-primary/30 hover:border-primary hover:bg-primary/5 shadow-sm">
-              <ConciergeBell className="w-5 h-5 text-primary" />
-              <span className="font-serif">Custom Request</span>
-            </Button>
-          </div>
-        </div>
-
-        {/* Next Course / Finish */}
-        {currentStep === 'finish' ? (
-          <div className="space-y-4">
-            <div className="card-paper p-6 bg-primary/5 border-primary/30 text-center">
-              <p className="text-xs text-gold uppercase tracking-widest mb-2 font-serif">Dining Complete</p>
-              <h3 className="font-serif text-2xl text-foreground mb-2">Thank you for dining with us.</h3>
-              <p className="text-sm text-muted-foreground italic">We hope you enjoyed your experience.</p>
+          {/* Card 2 — Browse Freely (Secondary) */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            onClick={() => setLocation("/menus")}
+            className="group bg-white rounded-xl p-5 cursor-pointer border border-[#E5E5E5] hover:border-[#D4AF37]/50 hover:bg-[#F9F9F9] transition-all duration-300 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-[#F5F5F5] flex items-center justify-center text-[#5C4033] group-hover:bg-white group-hover:shadow-sm transition-all">
+                <Compass className="w-5 h-5" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-medium text-[#2C2C2C] group-hover:text-[#8B4513] transition-colors">Browse the menu</h3>
+                <p className="text-xs text-[#5C4033]/60">Explore full selection at your own pace</p>
+              </div>
             </div>
-            <Button 
-              className="w-full btn-primary h-14 text-lg shadow-lg"
-              onClick={() => setLocation("/payment")}
-            >
-              Proceed to Payment
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {nextItems && nextItems.length > 0 ? (
-              <div className="card-paper p-4 bg-secondary/30 border-dashed border-primary/30">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 font-serif">Up Next</p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">🍽️</span>
-                    <span className="font-serif text-foreground text-lg">{nextItems[0].name} {nextItems.length > 1 && `+ ${nextItems.length - 1} more`}</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground font-medium">~15 mins</span>
-                </div>
-              </div>
-            ) : (
-              <div className="card-paper p-4 bg-secondary/30 border-dashed border-primary/30">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 font-serif">Up Next</p>
-                <div className="flex items-center justify-between">
-                  <span className="font-serif text-foreground text-lg">All dishes served.</span>
-                </div>
-              </div>
-            )}
+            <div className="text-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0 duration-300">
+              →
+            </div>
+          </motion.div>
 
-            {nextLabel && (
-              <Button 
-                className="w-full btn-primary h-14 text-lg shadow-lg gap-2"
-                onClick={handleReadyForNext}
-              >
-                <span>Ready for {nextLabel}</span>
-                <ArrowRight className="w-5 h-5" />
-              </Button>
-            )}
-          </div>
-        )}
-
-        {/* Add More Button */}
-        <Button 
-          variant="outline" 
-          className="w-full h-14 border-dashed border-primary/40 text-primary hover:bg-primary/5 gap-2"
-          onClick={() => setLocation("/menus")}
-        >
-          <Plus className="w-5 h-5" />
-          <span className="font-serif">Add More Items</span>
-        </Button>
+        </div>
       </div>
-
-      {/* Drawers */}
-      <AnimatePresence>
-        {activeDrawer && (
-          <>
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
-              onClick={() => setActiveDrawer(null)}
-            />
-            <motion.div 
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              className="fixed bottom-0 left-0 right-0 bg-background rounded-t-3xl z-50 p-6 pb-10 shadow-2xl border-t border-primary/20 max-h-[80vh] overflow-y-auto"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="font-serif text-2xl text-primary">
-                  {activeDrawer === "refill" && "Refill Drink"}
-                  {activeDrawer === "sides" && "Add Sides"}
-                  {activeDrawer === "condiments" && "Request Condiments"}
-                  {activeDrawer === "cutlery" && "New Cutlery"}
-                  {activeDrawer === "custom" && "Custom Request"}
-                </h3>
-                <button onClick={() => setActiveDrawer(null)} className="p-2 hover:bg-secondary rounded-full">
-                  <X className="w-6 h-6 text-muted-foreground" />
-                </button>
-              </div>
-
-              {activeDrawer === "refill" && (
-                <div className="space-y-3">
-                  {drinks.map((drink, i) => (
-                    <button key={i} onClick={() => handleRefill(drink.name)} className="w-full p-4 text-left card-paper hover:bg-secondary/50 transition-colors flex justify-between items-center">
-                      <span className="font-serif text-lg">{drink.name}</span>
-                      <Plus className="w-5 h-5 text-primary" />
-                    </button>
-                  ))}
-                  <button onClick={() => handleRefill("Still Water")} className="w-full p-4 text-left card-paper hover:bg-secondary/50 transition-colors flex justify-between items-center">
-                    <span className="font-serif text-lg">Still Water</span>
-                    <Plus className="w-5 h-5 text-primary" />
-                  </button>
-                  <button onClick={() => handleRefill("Sparkling Water")} className="w-full p-4 text-left card-paper hover:bg-secondary/50 transition-colors flex justify-between items-center">
-                    <span className="font-serif text-lg">Sparkling Water</span>
-                    <Plus className="w-5 h-5 text-primary" />
-                  </button>
-                </div>
-              )}
-
-              {activeDrawer === "sides" && (
-                <div className="space-y-3">
-                  {["Sourdough Bread", "Steamed Rice", "Truffle Fries", "Grilled Asparagus"].map((side) => (
-                    <button key={side} onClick={() => handleSideOrder(side)} className="w-full p-4 text-left card-paper hover:bg-secondary/50 transition-colors flex justify-between items-center">
-                      <span className="font-serif text-lg">{side}</span>
-                      <span className="text-sm font-mono text-muted-foreground">£6.00</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {activeDrawer === "condiments" && (
-                <div className="space-y-4">
-                  <Input 
-                    placeholder="e.g. Ketchup, Mayo, Hot Sauce..." 
-                    value={condimentRequest}
-                    onChange={(e) => setCondimentRequest(e.target.value)}
-                    className="font-serif text-lg p-6 h-16"
-                  />
-                  <Button className="w-full btn-primary h-14" onClick={() => handleServiceRequest("Condiments", condimentRequest)}>
-                    Request Condiments
-                  </Button>
-                </div>
-              )}
-
-              {activeDrawer === "cutlery" && (
-                <div className="grid grid-cols-3 gap-4">
-                  {["Fork", "Knife", "Spoon"].map((item) => (
-                    <button key={item} onClick={() => handleServiceRequest("Cutlery", item)} className="p-6 card-paper hover:bg-secondary/50 transition-colors flex flex-col items-center gap-2">
-                      <span className="text-2xl">🍴</span>
-                      <span className="font-serif">{item}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {activeDrawer === "custom" && (
-                <div className="space-y-4">
-                  <Textarea 
-                    placeholder="How can we help you?" 
-                    value={customRequest}
-                    onChange={(e) => setCustomRequest(e.target.value)}
-                    className="font-serif text-lg p-4 min-h-[150px]"
-                  />
-                  <Button className="w-full btn-primary h-14" onClick={() => handleServiceRequest("Custom Request", customRequest)}>
-                    Send Request
-                  </Button>
-                </div>
-              )}
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
